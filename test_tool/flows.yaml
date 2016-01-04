@@ -1,0 +1,55 @@
+Flows:
+  OP-Code-basic:
+    desc: Access token request with private_key_jwt authentication
+    profile: C..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: none
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+      - SyncAuthn
+      - AccessToken:
+          check_support:
+            WARNING:
+              token_endpoint_auth_methods_supported: private_key_jwt
+          set_op_args:
+            authn_method: private_key_jwt
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
+  OP-Implicit-basic:
+    desc: Access token request with private_key_jwt authentication
+    profile: T..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: none
+      - Registration
+      - SyncAuthn:
+          set_response_where:
+            where:
+              form_post
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
+  OP-DAC-basic:
+    desc: Access token request with private_key_jwt authentication
+    profile: D..T
+    sequence:
+      - AccessToken:
+          set_op_args:
+            authn_method: private_key_jwt
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
+Order:
+  - OP-Code
+  - OP-Implicit
+  - OP-DAC
+Desc:
+  OP-Code: "Full Client"
+  OP-DAC: "Browser Embedded Client"
+  OP-Implicit: "Direct Access Client"

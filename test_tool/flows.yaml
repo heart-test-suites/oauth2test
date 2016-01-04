@@ -50,6 +50,6 @@ Order:
   - OP-Implicit
   - OP-DAC
 Desc:
-  OP-Code: "Full Client"
-  OP-DAC: "Browser Embedded Client"
-  OP-Implicit: "Direct Access Client"
+  Code: "Full Client"
+  DAC: "Browser Embedded Client"
+  Implicit: "Direct Access Client"

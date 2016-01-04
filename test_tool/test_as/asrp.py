@@ -26,14 +26,17 @@ SERVER_LOG_FOLDER = "server_log"
 if not os.path.isdir(SERVER_LOG_FOLDER):
     os.makedirs(SERVER_LOG_FOLDER)
 
+
 def setup_common_log():
     global COMMON_LOGGER, hdlr, base_formatter
     COMMON_LOGGER = logging.getLogger("common")
     hdlr = logging.FileHandler("%s/common.log" % SERVER_LOG_FOLDER)
-    base_formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+    base_formatter = logging.Formatter(
+        "%(asctime)s %(name)s:%(levelname)s %(message)s")
     hdlr.setFormatter(base_formatter)
     COMMON_LOGGER.addHandler(hdlr)
     COMMON_LOGGER.setLevel(logging.DEBUG)
+
 
 setup_common_log()
 
@@ -74,7 +77,7 @@ def application(environ, start_response):
 
     tester = WebTester(io, sh, **webenv)
     tester.check_factory = get_check
-    #print(tester.check_factory)
+    # print(tester.check_factory)
 
     if path == "robots.txt":
         return io.static("static/robots.txt")
@@ -196,7 +199,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', dest='mailaddr')
     parser.add_argument('-o', dest='operations')
-    parser.add_argument('-f', dest='flows')
+    parser.add_argument('-f', dest='flows', action='append')
     parser.add_argument('-d', dest='directory')
     parser.add_argument('-p', dest='profile')
     parser.add_argument('-P', dest='profiles')
@@ -218,17 +221,14 @@ if __name__ == '__main__':
 
     setup_logging("%s/rp_%s.log" % (SERVER_LOG_FOLDER, CONF.PORT), LOGGER)
 
-    fdef = {'Flows': {}, 'Order': [], 'Desc': []}
+    fdef = {'Flows': {}, 'Order': [], 'Desc': {}}
     cls_factories = {'': operation.factory}
     func_factory = func.factory
-
-    spec = parse_yaml_conf(args.flows, cls_factories, func_factory)
-    fdef['Flows'].update(spec['Flows'])
-    for param in ['Order', 'Desc']:
-        try:
-            fdef[param].extend(spec[param])
-        except KeyError:
-            pass
+    for _file in args.flows:
+        spec = parse_yaml_conf(_file, cls_factories, func_factory)
+        fdef['Flows'].update(spec['Flows'])
+        fdef['Order'].extend(spec['Order'])
+        fdef['Desc'].update(spec['Desc'])
 
     if args.profiles:
         profiles = importlib.import_module(args.profiles)
@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
     # export JWKS
     p = urlparse(CONF.KEY_EXPORT_URL)
-    f = open("."+p.path, "w")
+    f = open("." + p.path, "w")
     f.write(json.dumps(jwks))
     f.close()
     jwks_uri = p.geturl()
@@ -282,6 +282,7 @@ if __name__ == '__main__':
 
     if CONF.BASE.startswith("https"):
         from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
+
         SRV.ssl_adapter = BuiltinSSLAdapter(CONF.SERVER_CERT, CONF.SERVER_KEY,
                                             CONF.CERT_CHAIN)
         extra = " using SSL/TLS"

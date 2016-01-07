@@ -35,8 +35,8 @@ INFO = {
         "redirect_uris": ["%sauthz_cb" % BASE],
         "application_type": "web",
         "contact": ["foo@example.com"]
-    }
+    },
+    'srv_discovery_url': 'https://localhost:8092'
     # registered
-    # srv_discovery_url
     # provider_info
 }

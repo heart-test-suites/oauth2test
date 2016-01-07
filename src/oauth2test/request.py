@@ -267,12 +267,10 @@ class AsyncRequest(Request):
         ev_index = _conv.events.store('reply', info)
 
         resp_cls = message_factory(self.response_cls)
-        algs = _conv.entity.sign_enc_algs("id_token")
         try:
             response = _conv.entity.parse_response(
-                resp_cls, info, _ctype,
-                self.csi["state"],
-                keyjar=_conv.entity.keyjar, algs=algs)
+                resp_cls, info, _ctype, self.csi["state"],
+                keyjar=_conv.entity.keyjar)
         except ResponseError as err:
             return io.err_response(self.sh.session, "run_sequence", err)
         except Exception as err:

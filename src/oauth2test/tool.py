@@ -16,12 +16,14 @@ from oauth2test import CRYPTSUPPORT
 from oauth2test import Trace
 
 from oauth2test.client import make_client
+from oauth2test.io import eval_func
 from oauth2test.prof_util import map_prof
 from oauth2test.utils import get_check
 
 __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
+
 
 def get_redirect_uris(cinfo):
     try:
@@ -201,6 +203,8 @@ class WebTester(Tester):
         self.conv = Conversation(_flow, _cli, kw_args["msg_factory"],
                                  trace_cls=Trace, callback_uris=redirs)
         _cli.conv = self.conv
+        # since webfinger is not used
+        self.conv.info['issuer'] = kw_args['conf'].INFO["srv_discovery_url"]
         self.sh.session_setup(path=test_id)
         self.sh.session["conv"] = self.conv
         self.conv.sequence = self.sh.session["sequence"]
@@ -249,9 +253,9 @@ class WebTester(Tester):
             logger.info("<--<-- {} --- {} -->-->".format(index, cls))
             try:
                 _oper = cls(conv=self.conv, io=self.io, sh=self.sh,
-                            profile=self.profile,
-                            test_id=test_id, conf=conf, funcs=funcs,
-                            check_factory=self.check_factory, cache=self.cache)
+                            profile=self.profile,test_id=test_id, conf=conf,
+                            funcs=funcs, check_factory=self.check_factory,
+                            cache=self.cache)
                 self.conv.operation = _oper
                 _oper.setup(self.profiles.PROFILEMAP)
                 resp = _oper()
@@ -268,18 +272,21 @@ class WebTester(Tester):
             index += 1
 
         try:
-            if self.conv.flow["tests"]:
-                print(">>", self.check_factory)
+            if self.conv.flow["assert"]:
+                #print(">>", self.check_factory)
                 _ver = Verify(self.check_factory, self.conv.msg_factory,
                               self.conv)
-                _ver.test_sequence(self.conv.flow["tests"])
+                _ver.test_sequence(self.conv.flow["assert"])
         except KeyError:
             pass
         except Exception as err:
             raise
-        else:
-            if isinstance(_oper, Done):
-                self.conv.events.store('test_output', END_TAG)
+
+        if isinstance(_oper, Done):
+            self.conv.events.store('test_output', END_TAG)
+            sess = self.sh.session
+            _ss['node'].complete = True
+            _ss['node'].state = eval_func(sess, sess["test_info"][test_id])
 
     def cont(self, environ, ENV):
         query = parse_qs(environ["QUERY_STRING"])

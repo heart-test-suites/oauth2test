@@ -8,7 +8,7 @@ Flows:
       - Registration:
           set_request_args:
             token_endpoint_auth_method: private_key_jwt
-      - SyncAuthn
+      - AsyncAuthn
       - AccessToken:
           check_support:
             WARNING:
@@ -26,7 +26,7 @@ Flows:
       - Discovery:
           set_discovery_issuer: none
       - Registration
-      - SyncAuthn:
+      - AsyncAuthn:
           set_response_where:
             where:
               form_post

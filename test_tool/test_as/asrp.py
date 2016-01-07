@@ -87,7 +87,6 @@ def application(environ, start_response):
         return io.static(path)
     elif path.startswith("export/"):
         return io.static(path)
-
     if path == "":  # list
         return tester.display_test_list()
     elif "flow_names" not in session:
@@ -186,7 +185,11 @@ def application(environ, start_response):
             if resp:
                 return resp
             else:
-                return io.flow_list(session)
+                try:
+                    return io.flow_list(session)
+                except Exception as err:
+                    LOGGER.error(err)
+                    raise
     else:
         resp = BadRequest()
         return resp(environ, start_response)
@@ -233,12 +236,12 @@ if __name__ == '__main__':
     if args.profiles:
         profiles = importlib.import_module(args.profiles)
     else:
-        from oidctest import profiles
+        from oauth2test import profiles
 
     if args.operations:
-        operations = importlib.import_module(args.operations)
+        operation = importlib.import_module(args.operations)
     else:
-        from oidctest import oper as operations
+        from oauth2test import operation
 
     if args.directory:
         _dir = args.directory
@@ -270,7 +273,7 @@ if __name__ == '__main__':
     ENV = {"base_url": CONF.BASE, "kidd": kidd, "keyjar": keyjar,
            "jwks_uri": jwks_uri, "flows": fdef['Flows'], "conf": CONF,
            "cinfo": CONF.INFO, "order": fdef['Order'],
-           "profiles": profiles, "operation": operations,
+           "profiles": profiles, "operation": operation,
            "profile": args.profile, "msg_factory": oic_message_factory,
            "lookup": LOOKUP, "desc": fdef['Desc'], "cache": {},
            'check_factory': get_check}

@@ -39,7 +39,11 @@ setup(
     install_requires=[
         "argparse",
         "requests >= 2.0.0",
-        'aatest'
+        'aatest',
+        'pyYAML',
+        'oic',
+        'pyjwkest',
+        'future'
     ],
     zip_safe=False,
 )

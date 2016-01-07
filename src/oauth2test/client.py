@@ -1,4 +1,4 @@
-from oic.oauth2 import dynreg
+from oic.extension import dynreg
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 
 

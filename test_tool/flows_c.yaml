@@ -1,0 +1,27 @@
+Flows:
+  HAS-Code-Default-Access_token:
+    desc: Access token request with private_key_jwt authentication
+    profile: C..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          set_jwks_uri: null
+      - AsyncAuthn
+      - AccessToken:
+          check_support:
+            WARNING:
+              token_endpoint_auth_methods_supported: private_key_jwt
+          set_op_args:
+            authn_method: private_key_jwt
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
+      verify-tokens: null
+Order:
+  - HAS-Code-Default
+Desc:
+  Default: "Default Settings"

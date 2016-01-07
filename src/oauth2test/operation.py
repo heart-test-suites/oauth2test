@@ -11,11 +11,9 @@ from jwkest.jwk import RSAKey
 from aatest import RequirementsNotMet, Unknown
 from aatest.operation import Operation
 
-from oic.exception import IssuerMismatch
-from oic.exception import PyoidcError
 from oic.oauth2 import rndstr
 from oic.oauth2.message import AccessTokenResponse
-from oic.oauth2.dynreg import ClientInfoResponse
+from oic.extension.dynreg import ClientInfoResponse
 from oic.oic import ProviderConfigurationResponse
 from oic.utils.keyio import KeyBundle
 from oic.utils.keyio import ec_init
@@ -23,7 +21,6 @@ from oic.utils.keyio import dump_jwks
 
 from oauth2test.prof_util import DISCOVER
 from oauth2test.prof_util import REGISTER
-from oauth2test.request import same_issuer
 from oauth2test.request import SyncGetRequest
 from oauth2test.request import AsyncGetRequest
 from oauth2test.request import SyncPostRequest
@@ -171,22 +168,22 @@ class AccessToken(SyncPostRequest):
             self.conv.trace.response("Access Token response: {}".format(atr))
             return False
 
-        try:
-            _jws_alg = atr["id_token"].jws_header["alg"]
-        except (KeyError, AttributeError):
-            pass
-        else:
-            if _jws_alg == "none":
-                pass
-            elif "kid" not in atr["id_token"].jws_header and not _jws_alg == "HS256":
-                keys = self.conv.entity.keyjar.keys_by_alg_and_usage(
-                    self.conv.info["issuer"], _jws_alg, "ver")
-                if len(keys) > 1:
-                    raise PyoidcError("No 'kid' in id_token header!")
-
-        if not same_issuer(self.conv.info["issuer"], atr["id_token"]["iss"]):
-            raise IssuerMismatch(" {} != {}".format(self.conv.info["issuer"],
-                                                    atr["id_token"]["iss"]))
+        # try:
+        #     _jws_alg = atr["id_token"].jws_header["alg"]
+        # except (KeyError, AttributeError):
+        #     pass
+        # else:
+        #     if _jws_alg == "none":
+        #         pass
+        #     elif "kid" not in atr["id_token"].jws_header and not _jws_alg == "HS256":
+        #         keys = self.conv.entity.keyjar.keys_by_alg_and_usage(
+        #             self.conv.info["issuer"], _jws_alg, "ver")
+        #         if len(keys) > 1:
+        #             raise PyoidcError("No 'kid' in id_token header!")
+        #
+        # if not same_issuer(self.conv.info["issuer"], atr["id_token"]["iss"]):
+        #     raise IssuerMismatch(" {} != {}".format(self.conv.info["issuer"],
+        #                                             atr["id_token"]["iss"]))
 
         self.conv.trace.response(atr)
         assert isinstance(atr, AccessTokenResponse)

@@ -21,7 +21,8 @@ def op_choice(base, nodes, test_info, headlines):
     element = "<ul>"
 
     for node in nodes:
-        p, grp, spec = node.name.split("-", 2)
+        # 4 or more parts
+        p1, p2, grp, spec = node.name.split("-", 3)
         if not grp == _grp:
             _grp = grp
             element += "<hr size=2><h3 id='%s'>%s</h3>" % (_grp, headlines[_grp])
@@ -99,7 +100,6 @@ def legends():
     def results(nodes, testresults):
         res = dict([(s, 0) for s in testresults.keys()])
         res[0] = 0
-        tot = len(nodes)
 
         for node in nodes:
             res[node.state] += 1
@@ -155,12 +155,10 @@ def legends():
     <div class="jumbotron">
         <h1>HEART OAuth2 AS Tests</h1>
         <em>Explanations of legends at <a href="#legends">end of page</a></em>
-
-        <h3>You are testing using: ${display_profile(profile)}</h3>
-        If you want to change this you can do it <a href="pedit">here</a>
-
+        <hr class="separator">
         <h3>Chose the next test flow you want to run from this list: </h3>
         ${op_choice(base, flows, test_info, headlines)}
+        <hr class="separator">
         <h3>Legends</h3>
         ${legends()}
     </div>

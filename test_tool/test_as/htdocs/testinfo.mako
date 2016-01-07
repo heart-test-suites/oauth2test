@@ -4,7 +4,7 @@ from aatest.check import STATUSCODE
 from aatest import summation
 
 def do_assertions(out):
-  return summation.do_assertions(out, True)
+  return summation.condition(out, True)
 %>
 
 <%!

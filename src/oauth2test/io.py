@@ -5,6 +5,7 @@ from urllib.parse import unquote
 from aatest import exception_trace
 from aatest import Break
 from aatest.io import IO
+from aatest.log import with_or_without_slash
 
 from oic.utils.http_util import Response, NotFound
 from oic.utils.time_util import in_a_while
@@ -29,6 +30,11 @@ logger = logging.getLogger(__name__)
 
 TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
                 INCOMPLETE: "INCOMPLETE"}
+
+
+def eval_func(session, info):
+    _conv = session['conv']
+    return OK
 
 
 class WebIO(IO):
@@ -76,6 +82,7 @@ class WebIO(IO):
                             template_lookup=self.lookup,
                             headers=[])
         except Exception as err:
+            logger.error(err)
             raise
 
         try:
@@ -109,10 +116,11 @@ class WebIO(IO):
                 if not path:
                     return
 
-                sline = 60*"="
-                output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
-                                                           "Test ID"]]
-                output.append("Timestamp: %s" % in_a_while())
+                sline = 60 * "="
+                output = ["{}: {}".format(k, _pi[k]) for k in ["Issuer",
+                                                               "Profile",
+                                                               "Test ID"]]
+                output.append("Timestamp: {}".format(in_a_while()))
                 output.extend(["", sline, ""])
                 output.extend(trace_output(_conv.trace))
                 output.extend(["", sline, ""])
@@ -121,7 +129,9 @@ class WebIO(IO):
                 # and lastly the result
                 self.store_test_info(session, _pi)
                 _info = session["test_info"][_tid]
-                output.append("RESULT: %s" % represent_result(_info, session))
+                output.append(
+                    "RESULT: {}".format(represent_result(_info, session,
+                                                         eval_func)))
                 output.append("")
 
                 f = open(path, "w")
@@ -240,7 +250,8 @@ class WebIO(IO):
 
     def display_log(self, root, issuer="", profile="", testid=""):
         logger.info(
-            "display_log root: '%s' issuer: '%s', profile: '%s' testid: '%s'" % (
+            "display_log root: '%s' issuer: '%s', profile: '%s' testid: '%s'"
+            % (
                 root, issuer, profile, testid))
         if testid:
             path = os.path.join(root, issuer, profile, testid).replace(":",
@@ -284,11 +295,12 @@ class WebIO(IO):
                     session["conv"].trace.error("%s:%s" % (
                         err.__class__.__name__, str(err)))
                 session["conv"].events.store('fault',
-                    {"id": "-", "status": err_type, "message": "%s" % err})
+                                             {"id": "-", "status": err_type,
+                                              "message": "%s" % err})
             else:
                 session["conv"].events.store('fault',
-                    {"id": "-", "status": err_type,
-                     "message": "Error in %s" % where})
+                                             {"id": "-", "status": err_type,
+                                              "message": "Error in %s" % where})
 
     def err_response(self, session, where, err):
         if err:
@@ -346,7 +358,7 @@ class ClIO(IO):
         else:
             _pi = get_profile_info(session, test_id)
             if _pi:
-                sline = 60*"="
+                sline = 60 * "="
                 output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
                                                            "Test ID"]]
                 output.append("Timestamp: %s" % in_a_while())

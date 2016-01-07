@@ -1,1 +1,1 @@
-# oauth2test
+# A HEART OAuth2 AS, RP and RS test tool

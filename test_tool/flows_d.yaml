@@ -1,0 +1,16 @@
+Flows:
+  HAS-Direct-Default-access_token:
+    desc: Access token request with private_key_jwt authentication
+    profile: D..T
+    sequence:
+      - AccessToken:
+          set_op_args:
+            authn_method: private_key_jwt
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
+Order:
+  - HAS-Direct-Default
+Desc:
+  Default: "Default settings"

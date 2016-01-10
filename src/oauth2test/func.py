@@ -296,6 +296,10 @@ def skip_operation(oper, arg):
         oper.skip = True
 
 
+def rm_claim_from_assertion(oper, arg):
+    pass
+
+
 def factory(name):
     for fname, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isfunction(obj):

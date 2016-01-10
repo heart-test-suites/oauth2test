@@ -16,7 +16,7 @@ from oauth2test import CRYPTSUPPORT
 from oauth2test import Trace
 
 from oauth2test.client import make_client
-from oauth2test.io import eval_func
+from oauth2test.io import eval_state
 from oauth2test.prof_util import map_prof
 from oauth2test.utils import get_check
 
@@ -128,6 +128,8 @@ class Tester(object):
 
         if isinstance(_oper, Done):
             self.conv.events.store('test_output', END_TAG)
+
+        self.io.dump_log(self.sh.session, test_id)
         return True
 
 
@@ -203,6 +205,7 @@ class WebTester(Tester):
         self.conv = Conversation(_flow, _cli, kw_args["msg_factory"],
                                  trace_cls=Trace, callback_uris=redirs)
         _cli.conv = self.conv
+        _cli.event_store = self.conv.events
         # since webfinger is not used
         self.conv.info['issuer'] = kw_args['conf'].INFO["srv_discovery_url"]
         self.sh.session_setup(path=test_id)
@@ -230,6 +233,12 @@ class WebTester(Tester):
                 return resp
         else:
             return None
+
+    def store_state(self, test_id, complete):
+        sess = self.sh.session
+        sess['node'].complete = complete
+        sess['node'].state = eval_state(sess)
+        self.io.dump_log(sess, test_id)
 
     def run_flow(self, test_id, conf=None, index=0):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
@@ -284,9 +293,7 @@ class WebTester(Tester):
 
         if isinstance(_oper, Done):
             self.conv.events.store('test_output', END_TAG)
-            sess = self.sh.session
-            _ss['node'].complete = True
-            _ss['node'].state = eval_func(sess, sess["test_info"][test_id])
+            self.store_state(test_id, complete=True)
 
     def cont(self, environ, ENV):
         query = parse_qs(environ["QUERY_STRING"])

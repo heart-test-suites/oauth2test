@@ -32,9 +32,13 @@ TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
                 INCOMPLETE: "INCOMPLETE"}
 
 
-def eval_func(session, info):
-    _conv = session['conv']
-    return OK
+def eval_state(session):
+    res = OK
+    for state in session['conv'].events.get_data('condition'):
+        if state.status > res:
+            res = state.status
+
+    return res
 
 
 class WebIO(IO):
@@ -130,8 +134,8 @@ class WebIO(IO):
                 self.store_test_info(session, _pi)
                 _info = session["test_info"][_tid]
                 output.append(
-                    "RESULT: {}".format(represent_result(_info, session,
-                                                         eval_func)))
+                    "RESULT: {}".format(represent_result(
+                        _info, session['node'].state)))
                 output.append("")
 
                 f = open(path, "w")
@@ -166,7 +170,7 @@ class WebIO(IO):
             "trace": info["trace"],
             "events": info["events"],
             "result": represent_result(
-                info, session).replace("\n", "<br>\n")
+                info, session['node'].state).replace("\n", "<br>\n")
         }
 
         return resp(self.environ, self.start_response, **argv)

@@ -142,7 +142,11 @@ def application(environ, start_response):
         return io.opresult(tester.conv, sh.session)
     # expected path format: /<testid>[/<endpoint>]
     elif path in session["flow_names"]:
-        return tester.run(path, **webenv)
+        resp = tester.run(path, **webenv)
+        if resp:
+            return resp
+        else:
+            return io.flow_list(session)
     elif path in ["authz_cb", "authz_post"]:
         if path == "authz_cb":
             _conv = session["conv"]

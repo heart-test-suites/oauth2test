@@ -1,5 +1,47 @@
 Flows:
-  HAS-Code-Default-Access_token:
+  HAS-Any-Discovery-Default:
+    desc: HEART AS configuration discovery
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+    assert:
+      verify-response:
+        response_cls:
+          - ProviderConfigurationResponse
+      verify-cache-header: null
+      verify-jwks: null
+      verify-response-claims:
+        claims:
+          - issuer
+          - authorization_endpoint
+          - token_endpoint
+          - introspection_endpoint
+          - revocation_endpoint
+          - jwks_uri
+  HAS-Any-Registration-Default:
+    desc: HEART client registration
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          set_jwks_uri: null
+    assert:
+      verify-response:
+        response_cls:
+          - ClientInfoResponse
+          - ProviderConfigurationResponse
+        claims:
+          - issuer
+          - authorization_endpoint
+          - token_endpoint
+          - introspection_endpoint
+          - revocation_endpoint
+          - jwks_uri
+  HAS-Code-Access_token-Default:
     desc: Access token request with private_key_jwt authentication
     profile: C..T
     sequence:
@@ -22,6 +64,10 @@ Flows:
           - AccessTokenResponse
       verify-tokens: null
 Order:
-  - HAS-Code-Default
+  - HAS-Any-Discovery
+  - HAS-Any-Registration
+  - HAS-Code-Access_token
 Desc:
-  Default: "Default Settings"
+  Access_token: 'Access Token Request'
+  Discovery: 'AS configuration discovery'
+  Registration: 'Dynamic Client registration'

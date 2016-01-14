@@ -9,9 +9,7 @@ Flows:
       verify-response:
         response_cls:
           - ProviderConfigurationResponse
-      verify-cache-header: null
-      verify-jwks: null
-      verify-response-claims:
+          - ASConfigurationResponse
         claims:
           - issuer
           - authorization_endpoint
@@ -19,6 +17,8 @@ Flows:
           - introspection_endpoint
           - revocation_endpoint
           - jwks_uri
+      verify-cache-header: null
+      verify-jwks: null
   HAS-Any-Registration-Default:
     desc: HEART client registration
     profile: ..T
@@ -33,14 +33,7 @@ Flows:
       verify-response:
         response_cls:
           - ClientInfoResponse
-          - ProviderConfigurationResponse
-        claims:
-          - issuer
-          - authorization_endpoint
-          - token_endpoint
-          - introspection_endpoint
-          - revocation_endpoint
-          - jwks_uri
+          - RegistrationResponse
   HAS-Code-Access_token-Default:
     desc: Access token request with private_key_jwt authentication
     profile: C..T
@@ -62,6 +55,34 @@ Flows:
       verify-response:
         response_cls:
           - AccessTokenResponse
+        not_claims:
+          - refresh_token
+      verify-tokens: null
+  HAS-Code-Access_token-OfflineAccess:
+    desc: Authorization request with scope=offline_access
+    profile: C..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          set_jwks_uri: null
+      - AsyncAuthn:
+          set_request_args:
+            scope: offline_access
+      - AccessToken:
+          check_support:
+            WARNING:
+              token_endpoint_auth_methods_supported: private_key_jwt
+          set_op_args:
+            authn_method: private_key_jwt
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
+        claims:
+          - refresh_token
       verify-tokens: null
 Order:
   - HAS-Any-Discovery

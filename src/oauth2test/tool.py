@@ -5,8 +5,9 @@ from aatest import exception_trace
 from aatest import END_TAG
 from aatest import Break
 from aatest.conversation import Conversation
-from aatest.verify import Verify
+from aatest.io import eval_state
 from aatest.session import Done
+from aatest.verify import Verify
 
 from oic.utils.http_util import Redirect
 from oic.utils.http_util import Response
@@ -16,7 +17,6 @@ from oauth2test import CRYPTSUPPORT
 from oauth2test import Trace
 
 from oauth2test.client import make_client
-from oauth2test.io import eval_state
 from oauth2test.prof_util import map_prof
 from oauth2test.utils import get_check
 
@@ -110,6 +110,7 @@ class Tester(object):
                 return self.io.err_response(self.sh.session, "run_sequence",
                                             err)
             else:
+                self.conv.trace.response(self.conv.events.last_item('response'))
                 resp = self.handle_response(resp, index)
                 if resp:
                     return self.io.respond(resp)
@@ -117,7 +118,7 @@ class Tester(object):
             index += 1
 
         try:
-            if self.conv.flow["tests"]:
+            if self.conv.flow["assert"]:
                 _ver = Verify(self.check_factory, self.conv.msg_factory,
                               self.conv)
                 _ver.test_sequence(self.conv.flow["tests"])
@@ -237,7 +238,7 @@ class WebTester(Tester):
     def store_state(self, test_id, complete):
         sess = self.sh.session
         sess['node'].complete = complete
-        sess['node'].state = eval_state(sess)
+        sess['node'].state = eval_state(sess['conv'].events)
         self.io.dump_log(sess, test_id)
 
     def run_flow(self, test_id, conf=None, index=0):
@@ -282,7 +283,6 @@ class WebTester(Tester):
 
         try:
             if self.conv.flow["assert"]:
-                #print(">>", self.check_factory)
                 _ver = Verify(self.check_factory, self.conv.msg_factory,
                               self.conv)
                 _ver.test_sequence(self.conv.flow["assert"])

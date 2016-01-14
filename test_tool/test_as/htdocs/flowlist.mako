@@ -46,7 +46,7 @@ def op_choice(base, nodes, test_info, headlines):
 <%!
 
 ICONS = [
-    ('<img src="static/black.png" alt="Black">',"The test has not be run"),
+    ('<img src="static/black.png" alt="Black">',"The test has not been run"),
     ('<img src="static/green.png" alt="Green">',"Success"),
     ('<img src="static/yellow.png" alt="Yellow">',
     "Warning, something was not as expected"),

@@ -75,6 +75,7 @@ class Discovery(Operation):
             self.conv.entity.provider_info = ProviderConfigurationResponse(
                 **self.conf.INFO["provider_info"]
             )
+        self.conv.trace.response(self.conv.entity.provider_info)
 
     def op_setup(self):
         # if self.dynamic:
@@ -99,6 +100,7 @@ class Registration(Operation):
         else:
             self.conv.entity.store_registration_info(
                 ClientInfoResponse(**self.conf.INFO["registered"]))
+        self.conv.trace.response(self.conv.entity.registration_response)
 
     def op_setup(self):
         if self.dynamic:
@@ -189,44 +191,6 @@ class AccessToken(SyncPostRequest):
         assert isinstance(atr, AccessTokenResponse)
 
 
-class UserInfo(SyncGetRequest):
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
-        self.op_args["state"] = conv.state
-
-    def run(self):
-        args = self.op_args.copy()
-        args.update(self.req_args)
-
-        user_info = self.conv.entity.do_user_info_request(**args)
-        assert user_info
-
-        self.catch_exception(self._verify_subject_identifier,
-                             client=self.conv.entity,
-                             user_info=user_info)
-
-        if "_claim_sources" in user_info:
-            user_info = self.conv.entity.unpack_aggregated_claims(user_info)
-            user_info = self.conv.entity.fetch_distributed_claims(user_info)
-
-        self.conv.entity.userinfo = user_info
-        self.conv.trace.response(user_info)
-
-    @staticmethod
-    def _verify_subject_identifier(client, user_info):
-        id_tokens = get_id_token(client.conv.last_item('response'))
-        if id_tokens:
-            if user_info["sub"] != id_tokens[0]["sub"]:
-                msg = "user_info['sub'] != id_token['sub']: '{}!={}'".format(
-                    user_info["sub"], id_tokens[0]["sub"])
-                raise SubjectMismatch(msg)
-        return "Subject identifier ok!"
-
-
-class DisplayUserInfo(Operation):
-    pass
-
-
 class UpdateProviderKeys(Operation):
     def __call__(self, *args, **kwargs):
         issuer = self.conv.entity.provider_info["issuer"]
@@ -281,6 +245,7 @@ class RestoreKeyJar(Operation):
         jwks = dict(keys=keys)
         with open(self.op_args["jwks_path"], "w") as f:
             f.write(json.dumps(jwks))
+
 
 class ReadRegistration(SyncGetRequest):
     def op_setup(self):

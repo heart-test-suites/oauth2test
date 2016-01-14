@@ -25,15 +25,29 @@ class VerifyResponse(Check):
     msg = "Expected OpenID Connect response"
 
     def check_claims(self, inst):
+        missing = []
+        excess = []
+
         if 'claims' in self._kwargs:
-            missing = []
             for claim in self._kwargs['claims']:
                 if claim not in inst:
                     missing.append(claim)
 
-            if missing:
-                self._status = ERROR
-                self._message = 'Missing claims: {}'.format(missing)
+        if 'not_claims' in self._kwargs:
+            for claim in self._kwargs['not_claims']:
+                if claim in inst:
+                    excess.append(claim)
+
+        if missing and excess:
+            self._status = ERROR
+            self._message = 'Missing claims: {}, Excess claims: {}'.format(
+                missing, excess)
+        elif missing:
+            self._status = ERROR
+            self._message = 'Missing claims: {}'.format(missing)
+        elif excess:
+            self._status = ERROR
+            self._message = 'Missing claims: {}'.format(excess)
 
     def _func(self, conv):
         inst, msg = conv.events.last_item('protocol_response')

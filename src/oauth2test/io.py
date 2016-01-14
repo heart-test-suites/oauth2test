@@ -32,15 +32,6 @@ TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
                 INCOMPLETE: "INCOMPLETE"}
 
 
-def eval_state(session):
-    res = OK
-    for state in session['conv'].events.get_data('condition'):
-        if state.status > res:
-            res = state.status
-
-    return res
-
-
 class WebIO(IO):
     def __init__(self, conf, flows, profile, profiles, operation,
                  desc, lookup, cache=None, environ=None,

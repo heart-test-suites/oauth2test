@@ -84,6 +84,51 @@ Flows:
         claims:
           - refresh_token
       verify-tokens: null
+  HAS-Code-Access_token-introspection:
+    desc: The AS must supply token introspection endpoint
+    profile: C..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          set_jwks_uri: null
+      - AsyncAuthn
+      - AccessToken:
+          check_support:
+            WARNING:
+              token_endpoint_auth_methods_supported: private_key_jwt
+          set_op_args:
+            authn_method: private_key_jwt
+      - TokenIntrospection
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
+  HAS-Code-Access_token-revocation:
+    desc: The AS must supply token introspection endpoint
+    profile: C..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          set_jwks_uri: null
+      - AsyncAuthn
+      - AccessToken:
+          check_support:
+            WARNING:
+              token_endpoint_auth_methods_supported: private_key_jwt
+          set_op_args:
+            authn_method: private_key_jwt
+      - TokenRecovation
+      - TokenIntrospection
+    assert:
+      verify-response:
+        response_cls:
+          - AccessTokenResponse
 Order:
   - HAS-Any-Discovery
   - HAS-Any-Registration

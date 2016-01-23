@@ -71,7 +71,7 @@ class VerifyAccessTokens(Check):
 
     def _func(self, conv):
 
-        token_factory = JWTToken('T', 0, '', '', keyjar=conv.entity.keyjar)
+        token_factory = JWTToken('T', conv.entity.keyjar, 0)
 
         inst, txtmsg = conv.events.last_item('protocol_response')
         try:

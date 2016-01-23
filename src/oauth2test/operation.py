@@ -10,6 +10,7 @@ from jwkest.jwk import RSAKey
 
 from aatest import RequirementsNotMet, Unknown
 from aatest.operation import Operation
+from oic.extension.message import TokenIntrospectionResponse
 
 from oic.oauth2 import rndstr
 from oic.oauth2.message import AccessTokenResponse
@@ -190,6 +191,57 @@ class AccessToken(SyncPostRequest):
         self.conv.trace.response(atr)
         assert isinstance(atr, AccessTokenResponse)
 
+
+        # 'token': SINGLE_REQUIRED_STRING,
+        # 'token_type_hint': SINGLE_OPTIONAL_STRING
+
+class TokenIntrospection(SyncPostRequest):
+    def __init__(self, conv, io, sh, **kwargs):
+        Operation.__init__(self, conv, io, sh, **kwargs)
+
+    def run(self):
+        self.catch_exception(self._run)
+
+    def _run(self):
+        if self.skip:
+            return
+
+        self.conv.trace.info(
+            "Token Introspection Request with op_args: {}, req_args: {}".format(
+                self.op_args, self.req_args))
+        atr = self.conv.entity.do_introspection_request(
+            request_args=self.req_args, **self.op_args)
+
+        if "error" in atr:
+            self.conv.trace.response("Token Introspection response: {}".format(atr))
+            return False
+
+        self.conv.trace.response(atr)
+        assert isinstance(atr, TokenIntrospectionResponse)
+
+
+class TokenRevocation(SyncPostRequest):
+    def __init__(self, conv, io, sh, **kwargs):
+        Operation.__init__(self, conv, io, sh, **kwargs)
+
+    def run(self):
+        self.catch_exception(self._run)
+
+    def _run(self):
+        if self.skip:
+            return
+
+        self.conv.trace.info(
+            "Token Introspection Request with op_args: {}, req_args: {}".format(
+                self.op_args, self.req_args))
+        atr = self.conv.entity.do_token_revocation(
+            request_args=self.req_args, **self.op_args)
+
+        if "error" in atr:
+            self.conv.trace.response("Token Revocation response: {}".format(atr))
+            return False
+
+        self.conv.trace.response(atr)
 
 class UpdateProviderKeys(Operation):
     def __call__(self, *args, **kwargs):

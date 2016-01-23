@@ -1,10 +1,10 @@
-from oic.extension import dynreg
+from oic.extension import client
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 
 
-class Client(dynreg.Client):
+class Client(client.Client):
     def __init__(self, *args, **kwargs):
-        dynreg.Client.__init__(self, *args, **kwargs)
+        client.Client.__init__(self, *args, **kwargs)
         self.conv = None
 
     def store_response(self, clinst, text):

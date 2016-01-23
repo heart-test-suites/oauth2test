@@ -17,7 +17,7 @@ def log_path(session, test_id=None):
 
     try:
         iss = _conv.entity.provider_info["issuer"]
-    except TypeError:
+    except (TypeError, KeyError):
         return ""
     else:
         qiss = quote_plus(iss)
@@ -83,7 +83,7 @@ def get_profile_info(session, test_id=None):
     else:
         try:
             iss = _conv.entity.provider_info["issuer"]
-        except TypeError:
+        except (TypeError, KeyError):
             iss = ""
 
         profile = to_profile(session, "dict")

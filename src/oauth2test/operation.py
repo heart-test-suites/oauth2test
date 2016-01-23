@@ -14,7 +14,7 @@ from oic.extension.message import TokenIntrospectionResponse
 
 from oic.oauth2 import rndstr
 from oic.oauth2.message import AccessTokenResponse
-from oic.extension.dynreg import ClientInfoResponse
+from oic.extension.client import ClientInfoResponse
 from oic.oic import ProviderConfigurationResponse
 from oic.utils.keyio import KeyBundle
 from oic.utils.keyio import ec_init
@@ -171,33 +171,18 @@ class AccessToken(SyncPostRequest):
             self.conv.trace.response("Access Token response: {}".format(atr))
             return False
 
-        # try:
-        #     _jws_alg = atr["id_token"].jws_header["alg"]
-        # except (KeyError, AttributeError):
-        #     pass
-        # else:
-        #     if _jws_alg == "none":
-        #         pass
-        #     elif "kid" not in atr["id_token"].jws_header and not _jws_alg == "HS256":
-        #         keys = self.conv.entity.keyjar.keys_by_alg_and_usage(
-        #             self.conv.info["issuer"], _jws_alg, "ver")
-        #         if len(keys) > 1:
-        #             raise PyoidcError("No 'kid' in id_token header!")
-        #
-        # if not same_issuer(self.conv.info["issuer"], atr["id_token"]["iss"]):
-        #     raise IssuerMismatch(" {} != {}".format(self.conv.info["issuer"],
-        #                                             atr["id_token"]["iss"]))
-
         self.conv.trace.response(atr)
         assert isinstance(atr, AccessTokenResponse)
 
 
-        # 'token': SINGLE_REQUIRED_STRING,
-        # 'token_type_hint': SINGLE_OPTIONAL_STRING
-
 class TokenIntrospection(SyncPostRequest):
     def __init__(self, conv, io, sh, **kwargs):
         Operation.__init__(self, conv, io, sh, **kwargs)
+
+    def op_setup(self):
+        self._token = self.conv.entity.get_token(state=self.conv.state)
+        self.req_args["token_type_hint"] = 'access_token'
+        self.req_args['token'] = getattr(self._token, 'access_token')
 
     def run(self):
         self.catch_exception(self._run)
@@ -209,7 +194,7 @@ class TokenIntrospection(SyncPostRequest):
         self.conv.trace.info(
             "Token Introspection Request with op_args: {}, req_args: {}".format(
                 self.op_args, self.req_args))
-        atr = self.conv.entity.do_introspection_request(
+        atr = self.conv.entity.do_token_introspection(
             request_args=self.req_args, **self.op_args)
 
         if "error" in atr:
@@ -234,14 +219,11 @@ class TokenRevocation(SyncPostRequest):
         self.conv.trace.info(
             "Token Introspection Request with op_args: {}, req_args: {}".format(
                 self.op_args, self.req_args))
-        atr = self.conv.entity.do_token_revocation(
+        resp = self.conv.entity.do_token_revocation(
             request_args=self.req_args, **self.op_args)
 
-        if "error" in atr:
-            self.conv.trace.response("Token Revocation response: {}".format(atr))
-            return False
+        self.conv.trace.response('HTTP response: {}'.format(resp.status))
 
-        self.conv.trace.response(atr)
 
 class UpdateProviderKeys(Operation):
     def __call__(self, *args, **kwargs):

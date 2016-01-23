@@ -101,13 +101,15 @@ Flows:
               token_endpoint_auth_methods_supported: private_key_jwt
           set_op_args:
             authn_method: private_key_jwt
-      - TokenIntrospection
+      - TokenIntrospection:
+          set_op_args:
+            authn_method: private_key_jwt
     assert:
       verify-response:
         response_cls:
-          - AccessTokenResponse
+          - TokenIntrospectionResponse
   HAS-Code-Access_token-revocation:
-    desc: The AS must supply token introspection endpoint
+    desc: The AS must supply token revocation endpoint
     profile: C..T
     sequence:
       - Discovery:
@@ -123,12 +125,15 @@ Flows:
               token_endpoint_auth_methods_supported: private_key_jwt
           set_op_args:
             authn_method: private_key_jwt
-      - TokenRecovation
-      - TokenIntrospection
+      - TokenRevocation:
+          set_op_args:
+            authn_method: private_key_jwt
+      - TokenIntrospection:
+          set_op_args:
+            authn_method: private_key_jwt
     assert:
-      verify-response:
-        response_cls:
-          - AccessTokenResponse
+      http_response:
+        status_code: 400
 Order:
   - HAS-Any-Discovery
   - HAS-Any-Registration

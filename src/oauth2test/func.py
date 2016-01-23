@@ -300,6 +300,11 @@ def rm_claim_from_assertion(oper, arg):
     pass
 
 
+def set_req_arg_token(oper, arg):
+    oper.req_args["token_type_hint"] = arg
+    oper.req_args['token'] = getattr(oper._token, arg)
+
+
 def factory(name):
     for fname, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isfunction(obj):

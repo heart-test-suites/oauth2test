@@ -198,7 +198,8 @@ class TokenIntrospection(SyncPostRequest):
             request_args=self.req_args, **self.op_args)
 
         if "error" in atr:
-            self.conv.trace.response("Token Introspection response: {}".format(atr))
+            self.conv.trace.response(
+                "Token Introspection response: {}".format(atr))
             return False
 
         self.conv.trace.response(atr)
@@ -209,6 +210,11 @@ class TokenRevocation(SyncPostRequest):
     def __init__(self, conv, io, sh, **kwargs):
         Operation.__init__(self, conv, io, sh, **kwargs)
 
+    def op_setup(self):
+        self._token = self.conv.entity.get_token(state=self.conv.state)
+        self.req_args["token_type_hint"] = 'access_token'
+        self.req_args['token'] = getattr(self._token, 'access_token')
+
     def run(self):
         self.catch_exception(self._run)
 
@@ -217,12 +223,13 @@ class TokenRevocation(SyncPostRequest):
             return
 
         self.conv.trace.info(
-            "Token Introspection Request with op_args: {}, req_args: {}".format(
+            "Token Revocation Request with op_args: {}, req_args: {}".format(
                 self.op_args, self.req_args))
         resp = self.conv.entity.do_token_revocation(
             request_args=self.req_args, **self.op_args)
 
-        self.conv.trace.response('HTTP response: {}'.format(resp.status))
+        self.conv.events.store('http_response', resp)
+        self.conv.trace.response('HTTP response: {}'.format(resp.status_code))
 
 
 class UpdateProviderKeys(Operation):
@@ -234,7 +241,6 @@ class UpdateProviderKeys(Operation):
 
 
 class RotateKey(Operation):
-
     def __call__(self):
         keyjar = self.conv.entity.keyjar
         self.conv.entity.original_keyjar = keyjar.copy()
@@ -261,14 +267,14 @@ class RotateKey(Operation):
         # make jwks and update file
         keys = []
         for kb in keyjar[""]:
-            keys.extend([k.to_dict() for k in list(kb.keys()) if not k.inactive_since])
+            keys.extend(
+                [k.to_dict() for k in list(kb.keys()) if not k.inactive_since])
         jwks = dict(keys=keys)
         with open(self.op_args["jwks_path"], "w") as f:
             f.write(json.dumps(jwks))
 
 
 class RestoreKeyJar(Operation):
-
     def __call__(self):
         self.conv.entity.keyjar = self.conv.entity.original_keyjar
 

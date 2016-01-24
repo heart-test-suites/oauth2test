@@ -129,8 +129,9 @@ Flows:
           set_op_args:
             authn_method: private_key_jwt
       - TokenIntrospection:
-          set_op_args:
-            authn_method: private_key_jwt
+          verify-response:
+            response_cls:
+              - TokenIntrospectionResponse
     assert:
       http_response:
         status_code: 400

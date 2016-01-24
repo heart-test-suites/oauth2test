@@ -102,6 +102,30 @@ Flows:
         claims:
           - refresh_token
       verify-tokens: null
+  HAS-Code-Access_token-Wrong_auth_method:
+    desc: Access token request with wrong client authentication method
+    profile: C..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          set_jwks_uri: null
+      - AsyncAuthn
+      - AccessToken:
+          set_op_args:
+            authn_method: client_secret_jwt
+          set_expect_error:
+            error:
+              - invalid_request
+              - access_denied
+              - unauthorized_client
+            stop: false
+    assert:
+      verify-response:
+        response_cls:
+          - TokenErrorResponse
   HAS-Code-Access_token-introspection:
     desc: The AS must supply token introspection endpoint
     profile: C..T

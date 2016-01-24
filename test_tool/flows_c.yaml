@@ -129,12 +129,14 @@ Flows:
           set_op_args:
             authn_method: private_key_jwt
       - TokenIntrospection:
-          verify-response:
-            response_cls:
-              - TokenIntrospectionResponse
+          set_op_args:
+            authn_method: private_key_jwt
     assert:
-      http_response:
-        status_code: 400
+      verify-response:
+        response_cls:
+          - TokenIntrospectionResponse
+        ava:
+          active: false
 Order:
   - HAS-Any-Discovery
   - HAS-Any-Registration

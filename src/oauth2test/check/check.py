@@ -49,12 +49,32 @@ class VerifyResponse(Check):
             self._status = ERROR
             self._message = 'Missing claims: {}'.format(excess)
 
+    def check_ava(self, inst):
+        for attr, val in self._kwargs['ava'].items():
+            try:
+                cval = inst[attr]
+            except KeyError:
+                self._status = ERROR
+                self._message = 'Missing claim: {}'.format(attr)
+                return
+
+            if val == cval:
+                pass
+            elif val in cval:
+                pass
+            else:
+                self._status = ERROR
+                self._message = 'Missing claim value: {} on {}'.format(
+                    val, attr)
+
     def _func(self, conv):
         inst, msg = conv.events.last_item('protocol_response')
         resp_name = inst.__class__.__name__
         for rcls in self._kwargs['response_cls']:
             if resp_name == rcls:
                 self.check_claims(inst)
+                if 'ava' in self._kwargs:
+                    self.check_ava(inst)
                 return {}
 
         self._status = ERROR

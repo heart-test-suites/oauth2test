@@ -8,11 +8,11 @@ from future.backports.urllib.parse import urlparse
 
 from jwkest.jwk import RSAKey
 
-from aatest import RequirementsNotMet, Unknown
+from aatest import RequirementsNotMet, Unknown, Break
 from aatest.operation import Operation
 from oic.extension.message import TokenIntrospectionResponse
 
-from oic.oauth2 import rndstr
+from oic.oauth2 import rndstr, ErrorResponse
 from oic.oauth2.message import AccessTokenResponse
 from oic.extension.client import ClientInfoResponse
 from oic.oic import ProviderConfigurationResponse
@@ -22,6 +22,7 @@ from oic.utils.keyio import dump_jwks
 
 from oauth2test.prof_util import DISCOVER
 from oauth2test.prof_util import REGISTER
+from oauth2test.request import Request
 from oauth2test.request import SyncGetRequest
 from oauth2test.request import AsyncGetRequest
 from oauth2test.request import SyncPostRequest
@@ -89,19 +90,26 @@ class Discovery(Operation):
         pass
 
 
-class Registration(Operation):
+class Registration(Request):
     def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+        Request.__init__(self, conv, io, sh, **kwargs)
 
         self.dynamic = self.profile[REGISTER] == "T"
 
     def run(self):
         if self.dynamic:
-            self.catch_exception(self.conv.entity.register, **self.req_args)
+            response = self.catch_exception(self.conv.entity.register,
+                                            **self.req_args)
+            if self.expect_error:
+                 self.expected_error_response(response)
+            else:
+                if isinstance(response, ErrorResponse):
+                    raise Break("Unexpected error response")
         else:
             self.conv.entity.store_registration_info(
                 ClientInfoResponse(**self.conf.INFO["registered"]))
         self.conv.trace.response(self.conv.entity.registration_response)
+
 
     def op_setup(self):
         if self.dynamic:

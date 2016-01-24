@@ -34,6 +34,24 @@ Flows:
         response_cls:
           - ClientInfoResponse
           - RegistrationResponse
+  HAS-Any-Registration-Wrong_auth_method:
+    desc: HEART client registration with wrong token_endpoint_auth_method
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: client_secret_jwt
+          set_jwks_uri: null
+          set_expect_error:
+            error:
+              - invalid_client_metadata
+            stop: false
+    assert:
+      verify-response:
+        response_cls:
+          - ErrorResponse
   HAS-Code-Access_token-Default:
     desc: Access token request with private_key_jwt authentication
     profile: C..T

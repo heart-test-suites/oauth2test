@@ -52,6 +52,71 @@ Flows:
       verify-response:
         response_cls:
           - ErrorResponse
+  HAS-Any-Registration-Response_types:
+    desc: HEART client registration with more then one response_type
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+            response_types:
+              - code
+              - token
+          set_jwks_uri: null
+          set_expect_error:
+            error:
+              - invalid_client_metadata
+            stop: false
+    assert:
+      verify-response:
+        response_cls:
+          - ErrorResponse
+  HAS-Any-Registration-Mismatch-Response_type-Grant_type:
+    desc: HEART client registration with response_type and grant_type that doesn't match
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+            response_types:
+              - code
+            grant_types:
+              - implicit
+          set_jwks_uri: null
+          set_expect_error:
+            error:
+              - invalid_client_metadata
+            stop: false
+    assert:
+      verify-response:
+        response_cls:
+          - ErrorResponse
+  HAS-Any-Registration-Grant_type_Client_cred:
+    desc: HEART client registration with grant_type client_credentials
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+            response_types:
+              -
+            grant_types:
+              - client_credentials
+          set_jwks_uri: null
+          set_expect_error:
+            error:
+              - invalid_client_metadata
+            stop: false
+    assert:
+      verify-response:
+        response_cls:
+          - ErrorResponse
   HAS-Code-Access_token-Default:
     desc: Access token request with private_key_jwt authentication
     profile: C..T

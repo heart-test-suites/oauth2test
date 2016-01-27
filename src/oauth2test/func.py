@@ -62,10 +62,10 @@ def set_principal(oper, args):
         raise ConfigurationError("Missing parameter: %s" % args["param"])
 
 
-def set_uri(oper, param, tail):
-    ru = get_redirect_uris(oper.conv)[0]
+def modify_redirect_uri(oper, arg):
+    ru = oper.conv.entity.redirect_uris[0]
     p = urlparse(ru)
-    oper.req_args[param] = "%s://%s/%s" % (p.scheme, p.netloc, tail)
+    oper.req_args['redirect_uri'] = "%s://%s/%s" % (p.scheme, p.netloc, arg)
 
 
 def static_jwk(oper, args):

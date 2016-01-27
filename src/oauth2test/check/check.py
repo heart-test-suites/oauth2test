@@ -177,6 +177,21 @@ class VerifyJWS(Check):
         return {}
 
 
+class VerifyReturnUri(Check):
+    cid = 'verify-redirect-uri'
+    msg = "Expected redirected message goes to registered return_uri"
+
+    def _func(self, conv):
+        http_response = conv.events.last_item('http response')
+
+        if http_response.url not in conv.entity.return_uris:
+            self._status = ERROR
+            self._message = 'Response returned to wrong uri: {}'.format(
+                http_response.url)
+
+        return {}
+
+
 def factory(cid):
     for name, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isclass(obj) and issubclass(obj, Check):

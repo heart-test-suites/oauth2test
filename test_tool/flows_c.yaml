@@ -132,6 +132,26 @@ Flows:
         response_cls:
           - ClientInfoResponse
           - RegistrationResponse
+  HAS-Any-Registration-With_software_statement:
+    desc: HEART client registration with Software Statement
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          add_software_statement:
+            redirect_uris: null
+            grant_types: 'authorization_code'
+            jwks_uri: null
+            client_name: 'HAS.testtool'
+            client_uri: https://example.com/
+    assert:
+      verify-response:
+        response_cls:
+          - ClientInfoResponse
+          - RegistrationResponse
   HAS-Code-AuthzReq-Wrong_response_type:
     desc: Authorization request with a response_type that isn't registered
     note: 'There are two acceptable outcomes: (1) returning an error

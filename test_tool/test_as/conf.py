@@ -40,3 +40,8 @@ INFO = {
     # registered
     # provider_info
 }
+
+TRUSTED_REGISTRATION_ENTITY = {
+    'iss': 'https://has.example.com/tre',
+    'jwks': 'tre.jwks',
+}

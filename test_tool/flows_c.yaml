@@ -118,12 +118,45 @@ Flows:
       verify-response:
         response_cls:
           - ErrorResponse
+  HAS-Any-Registration-JWKS:
+    desc: HEART client registration with jwks instead of jwks_uri
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          static_jwk: null
+    assert:
+      verify-response:
+        response_cls:
+          - ClientInfoResponse
+          - RegistrationResponse
+  HAS-Any-Registration-With_software_statement:
+    desc: HEART client registration with Software Statement
+    profile: ..T
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          add_software_statement:
+            redirect_uris: null
+            grant_types: 'authorization_code'
+            jwks_uri: null
+            client_name: 'HAS.testtool'
+            client_uri: https://example.com/
+    assert:
+      verify-response:
+        response_cls:
+          - ClientInfoResponse
+          - RegistrationResponse
   HAS-Code-AuthzReq-Wrong_response_type:
     desc: Authorization request with a response_type that isn't registered
     note: 'There are two acceptable outcomes: (1) returning an error
-      response to the RP or (2) returning an error message to the End-User.
-      In case (2), you must submit a screen shot of the error shown as part
-      of your certification application.'
+      response to the RP or (2) returning an error message to the End-User.'
     profile: C..T
     sequence:
       - Discovery:
@@ -144,7 +177,30 @@ Flows:
       verify-response:
         response_cls:
           - ErrorResponse
-      verify-tokens: null
+  HAS-Code-AuthzReq-Wrong_return_uri:
+    desc: Authorization request with a return_uri that doesn't match the registered
+    profile: C..T
+    note: 'There are two acceptable outcomes: (1) returning an error
+      response to the RP or (2) returning an error message to the End-User.'
+    sequence:
+      - Discovery:
+          set_discovery_issuer: null
+      - Registration:
+          set_request_args:
+            token_endpoint_auth_method: private_key_jwt
+          set_jwks_uri: null
+      - Note
+      - AsyncAuthn:
+          modify_redirect_uri: extension
+          set_expect_error:
+            error:
+              - invalid_request
+            stop: false
+    assert:
+      verify-response:
+        response_cls:
+          - ErrorResponse
+      verify-redirect-uri: null
   HAS-Code-Access_token-Default:
     desc: Access token request with private_key_jwt authentication
     profile: C..T

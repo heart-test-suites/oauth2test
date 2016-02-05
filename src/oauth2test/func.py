@@ -6,11 +6,12 @@ from urllib.parse import urlencode
 from urllib.parse import urlparse
 
 from aatest import ConfigurationError
-from aatest.check import ERROR, State
+from aatest.check import State
 from aatest.events import EV_CONDITION
 from aatest.events import EV_RESPONSE
 from aatest.tool import get_redirect_uris
 from oauth2test.check import get_id_tokens
+from aatest.check import ERROR
 
 __author__ = 'roland'
 
@@ -305,6 +306,38 @@ def rm_claim_from_assertion(oper, arg):
 def set_req_arg_token(oper, arg):
     oper.req_args["token_type_hint"] = arg
     oper.req_args['token'] = getattr(oper._token, arg)
+
+
+def add_software_statement(oper, arg):
+    argkeys = list(arg.keys())
+    kwargs = {}
+
+    iss = arg['iss']
+
+    if arg['redirect_uris'] is None:
+        kwargs['redirect_uris'] = oper.conv.entity.redirect_uris
+    else:
+        kwargs['redirect_uris'] = arg['redirect_uris']
+    argkeys.remove('redirect_uris')
+
+    if 'jwks_uri' in argkeys:
+        if arg['jwks_uri'] is None:
+            kwargs['jwks_uri'] = oper.conv.entity.jwks_uri
+        else:
+            kwargs['jwks_uri'] = arg['jwks_uri']
+        argkeys.remove('jwks_uri')
+    elif 'jwks' in argkeys:
+        if arg['jwks'] is None:
+            kwargs['jwks'] = {"keys": oper.conv.entity.keyjar.dump_issuer_keys("")}
+        else:
+            kwargs['jwks'] = arg['jwks']
+        argkeys.remove('jwks')
+
+    for a in argkeys:
+        kwargs[a] = arg[a]
+
+    oper.req_args['software_statement'] = make_software_statement(
+        oper.conv.client.keyjar, iss, **kwargs)
 
 
 def factory(name):

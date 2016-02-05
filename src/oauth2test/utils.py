@@ -2,6 +2,7 @@ import os
 import pkgutil
 
 from urllib.parse import quote_plus
+import math
 
 from oic.utils.time_util import in_a_while
 
@@ -81,7 +82,6 @@ def get_profile_info(session, test_id=None):
 
 
 def get_check(check_id):
-
     package = oa2_check
     prefix = package.__name__ + "."
     for importer, modname, ispkg in pkgutil.iter_modules(package.__path__,

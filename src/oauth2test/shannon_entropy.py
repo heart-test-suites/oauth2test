@@ -1,7 +1,8 @@
-__author__ = 'roland'
-
 from __future__ import division
 import math
+
+__author__ = 'roland'
+
 
 def hist(source):
     hist = {}; l = 0;

@@ -10,6 +10,7 @@ from aatest.check import State
 from aatest.events import EV_CONDITION
 from aatest.events import EV_RESPONSE
 from aatest.tool import get_redirect_uris
+from oic.extension.client import make_software_statement
 from oauth2test.check import get_id_tokens
 from aatest.check import ERROR
 
@@ -306,6 +307,12 @@ def rm_claim_from_assertion(oper, arg):
 def set_req_arg_token(oper, arg):
     oper.req_args["token_type_hint"] = arg
     oper.req_args['token'] = getattr(oper._token, arg)
+
+
+def modify_redirect_uri(oper,arg):
+    ru = oper.conv.entity.redirect_uris[0]
+    p = urlparse(ru)
+    oper.req_args['redirect_uri'] = '{}://{}/{}'.format(p.scheme, p.netloc, arg)
 
 
 def add_software_statement(oper, arg):

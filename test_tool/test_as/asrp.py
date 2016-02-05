@@ -22,6 +22,9 @@ from oauth2test.utils import get_check
 from oauth2test.io import WebIO
 from oauth2test.tool import WebTester
 
+from requests.packages import urllib3
+urllib3.disable_warnings()
+
 SERVER_LOG_FOLDER = "server_log"
 if not os.path.isdir(SERVER_LOG_FOLDER):
     os.makedirs(SERVER_LOG_FOLDER)

@@ -1,6 +1,7 @@
 from aatest.func import set_request_args
 from aatest.operation import Note
 from aatest.session import Done
+from oauth2test.func import check_endpoint
 
 from oauth2test.operation import AccessToken
 from oauth2test.operation import AsyncAuthn
@@ -8,7 +9,6 @@ from oauth2test.operation import Discovery
 from oauth2test.operation import Registration
 from oauth2test.operation import SyncAuthn
 
-from oidctest.testfunc import check_endpoint
 
 __author__ = 'roland'
 

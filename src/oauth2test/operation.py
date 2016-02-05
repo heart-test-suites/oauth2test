@@ -1,3 +1,4 @@
+import functools
 import inspect
 import json
 import logging
@@ -8,8 +9,13 @@ from future.backports.urllib.parse import urlparse
 
 from jwkest.jwk import RSAKey
 
-from aatest import RequirementsNotMet, Unknown, Break
-from aatest.operation import Operation
+from aatest import RequirementsNotMet
+from aatest import Unknown
+from aatest import Break
+from aatest import operation
+from aatest.events import EV_HTTP_RESPONSE
+from aatest.operation import request_with_client_http_session
+
 from oic.extension.message import TokenIntrospectionResponse
 
 from oic.oauth2 import rndstr, ErrorResponse
@@ -63,11 +69,30 @@ def get_id_token(responses):
     return res
 
 
+class Operation(operation.Operation):
+    def __init__(self, conv, io, sh, test_id='', conf=None,
+                 funcs=None, check_factory=None, cache=None, profile=''):
+        operation.Operation.__init__(self, conv, io, sh, test_id,
+                                     conf, funcs, check_factory, cache)
+
+        try:
+            self.profile = profile.split('.')
+        except AttributeError:
+            self.profile = profile
+
+        # Monkey-patch: make sure we use the same http session (preserving
+        # cookies) when fetching keys from issuers 'jwks_uri' as for the
+        # rest of the test sequence
+        import oic.utils.keyio
+
+        oic.utils.keyio.request = functools.partial(
+            request_with_client_http_session, self)
+
+
 class Discovery(Operation):
     def __init__(self, conv, io, sh, **kwargs):
         Operation.__init__(self, conv, io, sh, **kwargs)
-
-        self.dynamic = self.profile[DISCOVER] == "T"
+        self.dynamic = True
 
     def run(self):
         if self.dynamic:
@@ -80,13 +105,6 @@ class Discovery(Operation):
         self.conv.trace.response(self.conv.entity.provider_info)
 
     def op_setup(self):
-        # if self.dynamic:
-        #     try:
-        #         _issuer = include(self.op_args["issuer"], self.test_id)
-        #     except KeyError:
-        #         _issuer = include(self.conv.info["issuer"], self.test_id)
-        #
-        #     self.op_args["issuer"] = _issuer
         pass
 
 
@@ -94,7 +112,7 @@ class Registration(Request):
     def __init__(self, conv, io, sh, **kwargs):
         Request.__init__(self, conv, io, sh, **kwargs)
 
-        self.dynamic = self.profile[REGISTER] == "T"
+        self.dynamic = True
 
     def run(self):
         if self.dynamic:
@@ -110,6 +128,9 @@ class Registration(Request):
                 ClientInfoResponse(**self.conf.INFO["registered"]))
         self.conv.trace.response(self.conv.entity.registration_response)
 
+    def map_profile(self, profile_map):
+        for func, arg in profile_map[self.__class__][self.profile].items():
+            func(self, arg)
 
     def op_setup(self):
         if self.dynamic:
@@ -151,6 +172,10 @@ class AsyncAuthn(AsyncGetRequest):
         self.req_args["state"] = conv.state
         conv.nonce = rndstr()
         self.req_args["nonce"] = conv.nonce
+
+    def map_profile(self, profile_map):
+        for func, arg in profile_map[self.__class__][self.profile].items():
+            func(self, arg)
 
     def op_setup(self):
         self.req_args["redirect_uri"] = self.conv.extra_args['callback_uris'][0]
@@ -236,7 +261,7 @@ class TokenRevocation(SyncPostRequest):
         resp = self.conv.entity.do_token_revocation(
             request_args=self.req_args, **self.op_args)
 
-        self.conv.events.store('http_response', resp)
+        self.conv.events.store(EV_HTTP_RESPONSE, resp)
         self.conv.trace.response('HTTP response: {}'.format(resp.status_code))
 
 

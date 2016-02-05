@@ -4,18 +4,18 @@ from urllib.parse import unquote
 
 from aatest import exception_trace
 from aatest import Break
+from aatest.events import EV_CONDITION
 from aatest.io import IO
 from aatest.log import with_or_without_slash
 
 from oic.utils.http_util import Response, NotFound
 from oic.utils.time_util import in_a_while
 
-from aatest.check import ERROR
+from aatest.check import ERROR, State
 from aatest.check import OK
 from aatest.check import WARNING
 from aatest.check import INCOMPLETE
-from aatest.summation import represent_result
-from aatest.summation import evaluate
+from aatest.summation import represent_result, store_test_state
 from aatest.summation import condition
 from aatest.summation import trace_output
 from aatest.summation import create_tar_archive
@@ -123,10 +123,8 @@ class WebIO(IO):
                 output.extend(["", sline, ""])
                 # and lastly the result
                 self.store_test_info(session, _pi)
-                _info = session["test_info"][_tid]
                 output.append(
-                    "RESULT: {}".format(represent_result(
-                        _info, session['node'].state)))
+                    "RESULT: {}".format(represent_result(_conv.events)))
                 output.append("")
 
                 f = open(path, "w")
@@ -154,14 +152,14 @@ class WebIO(IO):
                         template_lookup=self.lookup,
                         headers=[])
 
+        _conv = session["conv"]
         info = get_test_info(session, testid)
 
         argv = {
             "profile": info["profile_info"],
             "trace": info["trace"],
             "events": info["events"],
-            "result": represent_result(
-                info, session['node'].state).replace("\n", "<br>\n")
+            "result": represent_result(_conv.events).replace("\n", "<br>\n")
         }
 
         return resp(self.environ, self.start_response, **argv)
@@ -289,13 +287,16 @@ class WebIO(IO):
                 else:
                     session["conv"].trace.error("%s:%s" % (
                         err.__class__.__name__, str(err)))
-                session["conv"].events.store('fault',
-                                             {"id": "-", "status": err_type,
-                                              "message": "%s" % err})
+                session["conv"].events.store(EV_CONDITION,
+                                             State("Fault", status=ERROR,
+                                                   name=err_type,
+                                                   message="{}".format(err)))
             else:
-                session["conv"].events.store('fault',
-                                             {"id": "-", "status": err_type,
-                                              "message": "Error in %s" % where})
+                session["conv"].events.store(
+                    EV_CONDITION, State(
+                        "Fault", status=ERROR,
+                        name=err_type,
+                        message="Error in %s" % where))
 
     def err_response(self, session, where, err):
         if err:
@@ -321,7 +322,7 @@ class WebIO(IO):
         return resp(self.environ, self.start_response, **argv)
 
     def opresult(self, conv, session):
-        evaluate(session, session["test_info"][conv.test_id])
+        store_test_state(session, conv.events)
         return self.flow_list(session)
 
     def opresult_fragment(self):
@@ -354,8 +355,9 @@ class ClIO(IO):
             _pi = get_profile_info(session, test_id)
             if _pi:
                 sline = 60 * "="
-                output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
-                                                           "Test ID"]]
+                output = ["%s: %s" % (k, _pi[k]) for k in
+                          ["Issuer", "Profile",
+                           "Test ID"]]
                 output.append("Timestamp: %s" % in_a_while())
                 output.extend(["", sline, ""])
                 output.extend(trace_output(_conv.trace))
@@ -363,32 +365,10 @@ class ClIO(IO):
                 output.extend(condition(_conv.events))
                 output.extend(["", sline, ""])
                 # and lastly the result
-                info = {
-                    "events": _conv.events,
-                    "trace": _conv.trace
-                }
-                output.append("RESULT: %s" % represent_result(info, session))
+                output.append(
+                    "RESULT: %s" % represent_result(_conv.events))
                 output.append("")
 
                 txt = "\n".join(output)
 
                 print(txt)
-
-    def result(self, session):
-        _conv = session["conv"]
-        info = {
-            "events": _conv.events,
-            "trace": _conv.trace
-        }
-        _state = evaluate(session, info)
-        print("{} {}".format(SIGN[_state], session["node"].name))
-
-    def err_response(self, session, where, err):
-        if err:
-            exception_trace(where, err, logger)
-
-        try:
-            _tid = session["testid"]
-            self.dump_log(session, _tid)
-        except KeyError:
-            pass

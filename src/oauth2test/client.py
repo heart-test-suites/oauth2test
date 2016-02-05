@@ -1,5 +1,6 @@
 from oic.extension import client
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
+from aatest.events import EV_PROTOCOL_RESPONSE, EV_RESPONSE
 
 
 class Client(client.Client):
@@ -8,7 +9,8 @@ class Client(client.Client):
         self.conv = None
 
     def store_response(self, clinst, text):
-        self.conv.events.store('protocol_response', (clinst, text))
+        ref = self.conv.events.store(EV_PROTOCOL_RESPONSE, clinst)
+        self.conv.events.store(EV_RESPONSE, text, ref=ref)
 
 
 def make_client(**kw_args):

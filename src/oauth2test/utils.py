@@ -37,31 +37,13 @@ def log_path(session, test_id=None):
     return "%s/%s/%s" % (path, prof, test_id)
 
 
-RT = {"C": "code", "I": "id_token", "T": "token"}
-OC = {"T": "config", "F": "no-config"}
-REG = {"T": "dynamic", "F": "static"}
-CR = {"n": "none", "s": "sign", "e": "encrypt"}
-EX = {"+": "extras"}
-ATTR = ["response_type", "openid-configuration", "registration", "crypto",
-        "extras"]
+RT = {"C": "code", "D": "client cred", "T": "token"}
+ATTR = ["profile"]
 
 
 def to_profile(session, representation="list"):
     p = session["profile"].split(".")
-    prof = [
-        "+".join([RT[x] for x in p[0]]),
-        "%s" % OC[p[1]],
-        "%s" % REG[p[2]]]
-
-    try:
-        prof.append("%s" % "+".join([CR[x] for x in p[3]]))
-    except KeyError:
-        pass
-    else:
-        try:
-            prof.append("%s" % EX[p[4]])
-        except (KeyError, IndexError):
-            pass
+    prof = [RT[p[0]]]
 
     if representation == "list":
         return prof
@@ -69,9 +51,6 @@ def to_profile(session, representation="list"):
         ret = {}
         for r in range(0, len(prof)):
             ret[ATTR[r]] = prof[r]
-
-        if "extras" in ret:
-            ret["extras"] = True
         return ret
 
 
@@ -94,8 +73,7 @@ def get_profile_info(session, test_id=None):
             except KeyError:
                 return {}
 
-        return {"Issuer": iss, "Profile": profile,
-                "Test ID": test_id,
+        return {"Issuer": iss, "Profile": profile, "Test ID": test_id,
                 "Test description": session["node"].desc,
                 "Timestamp": in_a_while()}
 

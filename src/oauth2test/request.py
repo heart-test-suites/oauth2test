@@ -16,6 +16,10 @@ from oic.utils.http_util import get_post
 from aatest import Break
 from aatest.operation import Operation
 from aatest.log import Log
+from aatest.events import EV_HTTP_RESPONSE
+from aatest.events import EV_URL
+from aatest.events import EV_REPLY
+from aatest.events import EV_RESPONSE
 
 __author__ = 'rolandh'
 
@@ -67,7 +71,7 @@ class SyncRequest(Request):
         response = client.http_request(url, method=self.method, data=body,
                                        **ht_args)
 
-        self.conv.events.store("http_response", response)
+        self.conv.events.store(EV_HTTP_RESPONSE, response)
         _trace.reply("RESPONSE: %s" % response)
         _trace.reply("CONTENT: %s" % response.text)
         try:
@@ -160,7 +164,7 @@ class SyncRequest(Request):
         response = self.catch_exception(self.handle_response, r=http_response,
                                         csi=csi)
         self.conv.trace.response(response)
-        self.conv.events.store('response', response)
+        self.conv.events.store(EV_RESPONSE, response)
         #self.sequence.append((response, http_response.text))
 
         if self.expect_error:
@@ -208,7 +212,7 @@ class AsyncRequest(Request):
 
         _trace.info("redirect.url: %s" % url)
         _trace.info("redirect.header: %s" % ht_args)
-        self.conv.events.store('url', url)
+        self.conv.events.store(EV_URL, url)
         return Redirect(str(url))
 
     def parse_response(self, path, io, message_factory):
@@ -264,7 +268,7 @@ class AsyncRequest(Request):
         logger.info("Response: %s" % info)
 
         _conv.trace.reply(info)
-        ev_index = _conv.events.store('reply', info)
+        ev_index = _conv.events.store(EV_REPLY, info)
 
         resp_cls = message_factory(self.response_cls)
         try:
@@ -279,7 +283,7 @@ class AsyncRequest(Request):
         logger.info("Parsed response: %s" % response.to_dict())
 
         _conv.trace.response(response)
-        _conv.events.store('response', response, ref=ev_index)
+        _conv.events.store(EV_RESPONSE, response, ref=ev_index)
 
         if self.expect_error:
             self.expected_error_response(response)

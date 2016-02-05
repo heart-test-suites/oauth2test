@@ -112,6 +112,7 @@ Flows:
           set_expect_error:
             error:
               - invalid_client_metadata
+              - invalid_request
             stop: false
     assert:
       verify-response:

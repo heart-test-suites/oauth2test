@@ -11,14 +11,18 @@ Contains verification checks. Checks on state or content.
 import inspect
 import sys
 
-from aatest.check import Check, ERROR, WARNING
+from aatest.check import Check
+from aatest.check import ERROR
+from aatest.check import WARNING
+from aatest.events import EV_HTTP_RESPONSE_HEADER
+from aatest.events import EV_PROTOCOL_RESPONSE
 from oic.extension.token import JWTToken
 from oic.utils.keyio import KeyBundle
 
 
 class VerifyResponse(Check):
     """
-    Checks that the last response was one of a possible set of OpenID Connect
+    Checks that the last response was one of a possible set of OAuth2
     Responses
     """
     cid = "verify-response"
@@ -68,7 +72,8 @@ class VerifyResponse(Check):
                     val, attr)
 
     def _func(self, conv):
-        inst, msg = conv.events.last_item('protocol_response')
+        inst = conv.events.last_item(EV_PROTOCOL_RESPONSE)
+
         resp_name = inst.__class__.__name__
         for rcls in self._kwargs['response_cls']:
             if resp_name == rcls:
@@ -93,7 +98,7 @@ class VerifyAccessTokens(Check):
 
         token_factory = JWTToken('T', conv.entity.keyjar, 0)
 
-        inst, txtmsg = conv.events.last_item('protocol_response')
+        inst = conv.events.last_item(EV_PROTOCOL_RESPONSE)
         try:
             token_factory.get_info(inst['access_token'])
         except Exception:
@@ -125,7 +130,7 @@ class VerifyCacheHeader(Check):
     msg = "Expected lifetime info through HTTP Cache Control"
 
     def _func(self, conv):
-        item = conv.events.last_item('http response header')
+        item = conv.events.last_item(EV_HTTP_RESPONSE_HEADER)
 
         _info = {}
         for attr in ['Expires', 'Cache-Control', 'Pragma']:
@@ -160,7 +165,7 @@ class VerifyJWS(Check):
     msg = "Expected public keys to be exported through JWKS"
 
     def _func(self, conv):
-        inst, txt_msg = conv.events.last_item('protocol_response')
+        inst = conv.events.last_item(EV_PROTOCOL_RESPONSE)
 
         try:
             kb = KeyBundle(source=inst['jwks_uri'])

@@ -4,7 +4,11 @@ from urllib.parse import parse_qs
 from aatest import exception_trace
 from aatest import END_TAG
 from aatest import Break
-from aatest.conversation import Conversation
+from aatest.check import State
+from aatest.check import OK
+from aatest.events import EV_CONDITION
+from aatest.events import EV_HTTP_RESPONSE
+from aatest.events import EV_RESPONSE
 from aatest.io import eval_state
 from aatest.session import Done
 from aatest.verify import Verify
@@ -17,6 +21,7 @@ from oauth2test import CRYPTSUPPORT
 from oauth2test import Trace
 
 from oauth2test.client import make_client
+from oauth2test.conversation import Conversation
 from oauth2test.prof_util import map_prof
 from oauth2test.utils import get_check
 
@@ -110,7 +115,7 @@ class Tester(object):
                 return self.io.err_response(self.sh.session, "run_sequence",
                                             err)
             else:
-                self.conv.trace.response(self.conv.events.last_item('response'))
+                self.conv.trace.response(self.conv.events.last_item(EV_RESPONSE))
                 resp = self.handle_response(resp, index)
                 if resp:
                     return self.io.respond(resp)
@@ -128,7 +133,7 @@ class Tester(object):
             raise
 
         if isinstance(_oper, Done):
-            self.conv.events.store('test_output', END_TAG)
+            self.conv.events.store(EV_CONDITION, State(END_TAG, status=OK))
 
         self.io.dump_log(self.sh.session, test_id)
         return True
@@ -228,7 +233,7 @@ class WebTester(Tester):
         if resp:
             self.sh.session["index"] = index
             if isinstance(resp, Response):
-                self.conv.events.store('http_response', resp)
+                self.conv.events.store(EV_HTTP_RESPONSE, resp)
                 return resp(self.io.environ, self.io.start_response)
             else:
                 return resp
@@ -292,7 +297,7 @@ class WebTester(Tester):
             raise
 
         if isinstance(_oper, Done):
-            self.conv.events.store('test_output', END_TAG)
+            self.conv.events.store(EV_CONDITION, State('done', status=OK))
             self.store_state(test_id, complete=True)
 
     def cont(self, environ, ENV):

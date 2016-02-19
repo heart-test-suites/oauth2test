@@ -8,21 +8,22 @@ from aatest.events import EV_CONDITION
 from aatest.io import IO
 from aatest.log import with_or_without_slash
 
-from oic.utils.http_util import Response, NotFound
+from oic.utils.http_util import NotFound
+from oic.utils.http_util import Response
 from oic.utils.time_util import in_a_while
 
-from aatest.check import ERROR, State
+from aatest.check import ERROR
 from aatest.check import OK
 from aatest.check import WARNING
 from aatest.check import INCOMPLETE
-from aatest.summation import represent_result, store_test_state
+from aatest.check import State
+from aatest.summation import represent_result
+from aatest.summation import store_test_state
 from aatest.summation import condition
 from aatest.summation import trace_output
-from aatest.summation import create_tar_archive
 from aatest.utils import get_test_info
 
 from oauth2test.utils import get_profile_info
-from oauth2test.utils import log_path
 
 __author__ = 'roland'
 
@@ -33,16 +34,16 @@ TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
 
 
 class WebIO(IO):
-    def __init__(self, conf, flows, profile, profiles, operation,
-                 desc, lookup, cache=None, environ=None,
-                 start_response=None, **kwargs):
-        IO.__init__(self, flows=flows, profile=profile, profiles=profiles,
-                    operation=operation, desc=desc, **kwargs)
+    def __init__(self, conf, flows, desc, profile_handler, profile, lookup,
+                 cache=None, environ=None, start_response=None, **kwargs):
+        IO.__init__(self, flows, profile, desc, profile_handler, cache,
+                    **kwargs)
+        # IO.__init__(self, flows=flows, profile=profile, profiles=profiles,
+        #             operation=operation, desc=desc, **kwargs)
         self.conf = conf
         self.lookup = lookup
         self.environ = environ
         self.start_response = start_response
-        self.cache = cache
 
     @staticmethod
     def store_test_info(session, profile_info=None):
@@ -97,48 +98,6 @@ class WebIO(IO):
         }
 
         return resp(self.environ, self.start_response, **argv)
-
-    def dump_log(self, session, test_id=None):
-        try:
-            _conv = session["conv"]
-        except KeyError:
-            pass
-        else:
-            _pi = get_profile_info(session, test_id)
-            if _pi:
-                _tid = _pi["Test ID"]
-                path = log_path(session, _tid)
-                if not path:
-                    return
-
-                sline = 60 * "="
-                output = ["{}: {}".format(k, _pi[k]) for k in ["Issuer",
-                                                               "Profile",
-                                                               "Test ID"]]
-                output.append("Timestamp: {}".format(in_a_while()))
-                output.extend(["", sline, ""])
-                output.extend(trace_output(_conv.trace))
-                output.extend(["", sline, ""])
-                output.extend(condition(_conv.events))
-                output.extend(["", sline, ""])
-                # and lastly the result
-                self.store_test_info(session, _pi)
-                output.append(
-                    "RESULT: {}".format(represent_result(_conv.events)))
-                output.append("")
-
-                f = open(path, "w")
-                txt = "\n".join(output)
-
-                try:
-                    f.write(txt)
-                except UnicodeEncodeError:
-                    f.write(txt.encode("utf8"))
-
-                f.close()
-                pp = path.split("/")
-                create_tar_archive(pp[1], pp[2])
-                return path
 
     def profile_edit(self, session):
         resp = Response(mako_template="profile.mako",

@@ -1,0 +1,594 @@
+{
+  "Order": [
+    "HAS-Any-Discovery",
+    "HAS-Any-Registration",
+    "HAS-Code-AuthzReq",
+    "HAS-Code-Access_token"
+  ],
+  "Flows": {
+    "HAS-Code-Access_token-Default": {
+      "profile": "C..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "AccessTokenResponse"
+          ],
+          "not_claims": [
+            "refresh_token"
+          ]
+        },
+        "verify-tokens": null
+      },
+      "desc": "Access token request with private_key_jwt authentication",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        },
+        "AsyncAuthn",
+        {
+          "AccessToken": {
+            "check_support": {
+              "WARNING": {
+                "token_endpoint_auth_methods_supported": "private_key_jwt"
+              }
+            },
+            "set_op_args": {
+              "authn_method": "private_key_jwt"
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Any-Registration-Wrong_auth_method": {
+      "profile": "..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ErrorResponse"
+          ]
+        }
+      },
+      "desc": "HEART client registration with wrong token_endpoint_auth_method",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_expect_error": {
+              "stop": false,
+              "error": [
+                "invalid_client_metadata"
+              ]
+            },
+            "set_request_args": {
+              "token_endpoint_auth_method": "client_secret_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        }
+      ]
+    },
+    "HAS-Any-Registration-Default": {
+      "profile": "..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ClientInfoResponse",
+            "RegistrationResponse"
+          ]
+        }
+      },
+      "desc": "HEART client registration",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        }
+      ]
+    },
+    "HAS-Any-Registration-Mismatch-Response_type-Grant_type": {
+      "profile": "..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ErrorResponse"
+          ]
+        }
+      },
+      "desc": "HEART client registration with response_type and grant_type that doesn't match",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_expect_error": {
+              "stop": false,
+              "error": [
+                "invalid_client_metadata"
+              ]
+            },
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt",
+              "grant_types": [
+                "implicit"
+              ],
+              "response_types": [
+                "code"
+              ]
+            },
+            "set_jwks_uri": null
+          }
+        }
+      ]
+    },
+    "HAS-Any-Registration-JWKS": {
+      "profile": "..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ClientInfoResponse",
+            "RegistrationResponse"
+          ]
+        }
+      },
+      "desc": "HEART client registration with jwks instead of jwks_uri",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "static_jwk": null,
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Code-Access_token-Wrong_auth_method": {
+      "profile": "C..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "TokenErrorResponse"
+          ]
+        }
+      },
+      "desc": "Access token request with wrong client authentication method",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        },
+        "AsyncAuthn",
+        {
+          "AccessToken": {
+            "set_expect_error": {
+              "stop": false,
+              "error": [
+                "invalid_request",
+                "access_denied",
+                "unauthorized_client"
+              ]
+            },
+            "set_op_args": {
+              "authn_method": "client_secret_jwt"
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Any-Registration-With_software_statement": {
+      "profile": "..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ClientInfoResponse",
+            "RegistrationResponse"
+          ]
+        }
+      },
+      "desc": "HEART client registration with Software Statement",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "add_software_statement": {
+              "jwks_uri": null,
+              "client_name": "HAS.testtool",
+              "grant_types": "authorization_code",
+              "client_uri": "https://example.com/",
+              "redirect_uris": null
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Code-Access_token-introspection": {
+      "profile": "C..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "TokenIntrospectionResponse"
+          ]
+        }
+      },
+      "desc": "The AS must supply token introspection endpoint",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        },
+        "AsyncAuthn",
+        {
+          "AccessToken": {
+            "check_support": {
+              "WARNING": {
+                "token_endpoint_auth_methods_supported": "private_key_jwt"
+              }
+            },
+            "set_op_args": {
+              "authn_method": "private_key_jwt"
+            }
+          }
+        },
+        {
+          "TokenIntrospection": {
+            "set_op_args": {
+              "authn_method": "private_key_jwt"
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Code-AuthzReq-Wrong_return_uri": {
+      "profile": "C..T",
+      "note": "There are two acceptable outcomes: (1) returning an error response to the RP or (2) returning an error message to the End-User.",
+      "desc": "Authorization request with a return_uri that doesn't match the registered",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ErrorResponse"
+          ]
+        },
+        "verify-redirect-uri": null
+      },
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        },
+        "Note",
+        {
+          "AsyncAuthn": {
+            "modify_redirect_uri": "extension",
+            "set_expect_error": {
+              "stop": false,
+              "error": [
+                "invalid_request"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Any-Registration-Response_types": {
+      "profile": "..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ErrorResponse"
+          ]
+        }
+      },
+      "desc": "HEART client registration with more then one response_type",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_expect_error": {
+              "stop": false,
+              "error": [
+                "invalid_client_metadata"
+              ]
+            },
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt",
+              "response_types": [
+                "code",
+                "token"
+              ]
+            },
+            "set_jwks_uri": null
+          }
+        }
+      ]
+    },
+    "HAS-Code-Access_token-OfflineAccess": {
+      "profile": "C..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "AccessTokenResponse"
+          ],
+          "claims": [
+            "refresh_token"
+          ]
+        },
+        "verify-tokens": null
+      },
+      "desc": "Authorization request with scope=offline_access",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        },
+        {
+          "AsyncAuthn": {
+            "set_request_args": {
+              "scope": "offline_access"
+            }
+          }
+        },
+        {
+          "AccessToken": {
+            "check_support": {
+              "WARNING": {
+                "token_endpoint_auth_methods_supported": "private_key_jwt"
+              }
+            },
+            "set_op_args": {
+              "authn_method": "private_key_jwt"
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Any-Registration-Grant_type_Client_cred": {
+      "profile": "..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ErrorResponse"
+          ]
+        }
+      },
+      "desc": "HEART client registration with grant_type client_credentials",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_expect_error": {
+              "stop": false,
+              "error": [
+                "invalid_client_metadata",
+                "invalid_request"
+              ]
+            },
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt",
+              "grant_types": [
+                "client_credentials"
+              ],
+              "response_types": [
+                null
+              ]
+            },
+            "set_jwks_uri": null
+          }
+        }
+      ]
+    },
+    "HAS-Code-AuthzReq-Wrong_response_type": {
+      "note": "There are two acceptable outcomes: (1) returning an error response to the RP or (2) returning an error message to the End-User.",
+      "profile": "C..T",
+      "desc": "Authorization request with a response_type that isn't registered",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "ErrorResponse"
+          ]
+        }
+      },
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        },
+        "Note",
+        {
+          "AsyncAuthn": {
+            "set_expect_error": {
+              "stop": false,
+              "error": [
+                "invalid_client_metadata"
+              ]
+            },
+            "set_request_args": {
+              "response_type": "token"
+            }
+          }
+        }
+      ]
+    },
+    "HAS-Any-Discovery-Default": {
+      "profile": "..T",
+      "assert": {
+        "verify-jwks": null,
+        "verify-response": {
+          "response_cls": [
+            "ProviderConfigurationResponse",
+            "ASConfigurationResponse"
+          ],
+          "claims": [
+            "issuer",
+            "authorization_endpoint",
+            "token_endpoint",
+            "introspection_endpoint",
+            "revocation_endpoint",
+            "jwks_uri"
+          ]
+        },
+        "verify-cache-header": null
+      },
+      "desc": "HEART AS configuration discovery",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        }
+      ]
+    },
+    "HAS-Code-Access_token-revocation": {
+      "profile": "C..T",
+      "assert": {
+        "verify-response": {
+          "response_cls": [
+            "TokenIntrospectionResponse"
+          ],
+          "ava": {
+            "active": false
+          }
+        }
+      },
+      "desc": "The AS must supply token revocation endpoint",
+      "sequence": [
+        {
+          "Discovery": {
+            "set_discovery_issuer": null
+          }
+        },
+        {
+          "Registration": {
+            "set_request_args": {
+              "token_endpoint_auth_method": "private_key_jwt"
+            },
+            "set_jwks_uri": null
+          }
+        },
+        "AsyncAuthn",
+        {
+          "AccessToken": {
+            "check_support": {
+              "WARNING": {
+                "token_endpoint_auth_methods_supported": "private_key_jwt"
+              }
+            },
+            "set_op_args": {
+              "authn_method": "private_key_jwt"
+            }
+          }
+        },
+        {
+          "TokenRevocation": {
+            "set_op_args": {
+              "authn_method": "private_key_jwt"
+            }
+          }
+        },
+        {
+          "TokenIntrospection": {
+            "set_op_args": {
+              "authn_method": "private_key_jwt"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "Desc": {
+    "Access_token": "Access Token Request",
+    "Discovery": "AS configuration discovery",
+    "AuthzReq": "Authorization Request",
+    "Registration": "Dynamic Client registration"
+  }
+}

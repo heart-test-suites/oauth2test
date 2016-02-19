@@ -26,8 +26,6 @@ from oic.utils.keyio import KeyBundle
 from oic.utils.keyio import ec_init
 from oic.utils.keyio import dump_jwks
 
-from oauth2test.prof_util import DISCOVER
-from oauth2test.prof_util import REGISTER
 from oauth2test.request import Request
 from oauth2test.request import SyncGetRequest
 from oauth2test.request import AsyncGetRequest
@@ -70,9 +68,9 @@ def get_id_token(responses):
 
 
 class Operation(operation.Operation):
-    def __init__(self, conv, io, sh, test_id='', conf=None,
+    def __init__(self, conv, inut, sh, test_id='', conf=None,
                  funcs=None, check_factory=None, cache=None, profile=''):
-        operation.Operation.__init__(self, conv, io, sh, test_id,
+        operation.Operation.__init__(self, conv, inut, sh, test_id,
                                      conf, funcs, check_factory, cache)
 
         try:
@@ -90,8 +88,8 @@ class Operation(operation.Operation):
 
 
 class Discovery(Operation):
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        Operation.__init__(self, conv, inut, sh, **kwargs)
         self.dynamic = True
 
     def run(self):
@@ -109,8 +107,8 @@ class Discovery(Operation):
 
 
 class Registration(Request):
-    def __init__(self, conv, io, sh, **kwargs):
-        Request.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        Request.__init__(self, conv, inut, sh, **kwargs)
 
         self.dynamic = True
 
@@ -143,8 +141,8 @@ class SyncAuthn(SyncGetRequest):
     response_cls = "AuthorizationResponse"
     request_cls = "AuthorizationRequest"
 
-    def __init__(self, conv, io, sh, **kwargs):
-        super(SyncAuthn, self).__init__(conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        super(SyncAuthn, self).__init__(conv, inut, sh, **kwargs)
         self.op_args["endpoint"] = conv.entity.provider_info[
             "authorization_endpoint"]
 
@@ -163,8 +161,8 @@ class AsyncAuthn(AsyncGetRequest):
     response_cls = "AuthorizationResponse"
     request_cls = "AuthorizationRequest"
 
-    def __init__(self, conv, io, sh, **kwargs):
-        super(AsyncAuthn, self).__init__(conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        super(AsyncAuthn, self).__init__(conv, inut, sh, **kwargs)
         self.op_args["endpoint"] = conv.entity.provider_info[
             "authorization_endpoint"]
 
@@ -182,8 +180,8 @@ class AsyncAuthn(AsyncGetRequest):
 
 
 class AccessToken(SyncPostRequest):
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        SyncPostRequest.__init__(self, conv, inut, sh, **kwargs)
         self.op_args["state"] = conv.state
         self.req_args["redirect_uri"] = conv.entity.redirect_uris[0]
 
@@ -209,8 +207,8 @@ class AccessToken(SyncPostRequest):
 
 
 class TokenIntrospection(SyncPostRequest):
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        SyncPostRequest.__init__(self, conv, inut, sh, **kwargs)
 
     def op_setup(self):
         self._token = self.conv.entity.get_token(state=self.conv.state)
@@ -240,8 +238,8 @@ class TokenIntrospection(SyncPostRequest):
 
 
 class TokenRevocation(SyncPostRequest):
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        SyncPostRequest.__init__(self, conv, inut, sh, **kwargs)
 
     def op_setup(self):
         self._token = self.conv.entity.get_token(state=self.conv.state)
@@ -292,6 +290,8 @@ class RotateKey(Operation):
                 RSA.generate(key_spec["bits"])))
         elif typ == "EC":
             kb = ec_init(key_spec)
+        else:
+            Exception('Wrong key type')
 
         # add new key to keyjar with
         list(kb.keys())[0].kid = self.op_args["new_kid"]
@@ -342,8 +342,8 @@ class FetchKeys(Operation):
 
 
 class RotateKeys(Operation):
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        Operation.__init__(self, conv, inut, sh, **kwargs)
         self.jwk_name = "export/jwk.json"
         self.new_key = {}
         self.kid_template = "_%d"
@@ -386,16 +386,16 @@ class RotateKeys(Operation):
 
 
 class RotateSigKeys(RotateKeys):
-    def __init__(self, conv, io, sh, **kwargs):
-        RotateKeys.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        RotateKeys.__init__(self, conv, inut, sh, **kwargs)
         self.new_key = {"type": "RSA", "key": "../keys/second_sig.key",
                         "use": ["sig"]}
         self.kid_template = "sig%d"
 
 
 class RotateEncKeys(RotateKeys):
-    def __init__(self, conv, io, sh, **kwargs):
-        RotateKeys.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        RotateKeys.__init__(self, conv, inut, sh, **kwargs)
         self.new_key = {"type": "RSA", "key": "../keys/second_enc.key",
                         "use": ["enc"]}
         self.kid_template = "enc%d"

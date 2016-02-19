@@ -22,7 +22,6 @@ from oauth2test import Trace
 
 from oauth2test.client import make_client
 from oauth2test.conversation import Conversation
-from oauth2test.prof_util import map_prof
 from oauth2test.utils import get_check
 
 __author__ = 'roland'
@@ -38,9 +37,9 @@ def get_redirect_uris(cinfo):
 
 
 class Tester(object):
-    def __init__(self, io, sh, profiles, profile, flows,
+    def __init__(self, inut, sh, profiles, profile, flows,
                  msg_factory=None, cache=None, **kwargs):
-        self.io = io
+        self.inut = inut
         self.sh = sh
         self.profiles = profiles
         self.profile = profile
@@ -53,7 +52,7 @@ class Tester(object):
 
     def match_profile(self, test_id):
         _spec = self.flows[test_id]
-        return map_prof(self.profile.split("."), _spec["profile"].split("."))
+        return set(self.profile) == set(_spec["profile"])
 
     def run(self, test_id, cinfo, **kw_args):
         if not self.match_profile(test_id):
@@ -77,8 +76,8 @@ class Tester(object):
             return self.run_flow(test_id, kw_args["conf"])
         except Exception as err:
             exception_trace("", err, logger)
-            self.io.dump_log(self.sh.session, test_id)
-            return self.io.err_response(self.sh.session, "run", err)
+            self.inut.dump_log(self.sh.session, test_id)
+            return self.inut.err_response(self.sh.session, "run", err)
 
     def handle_response(self, resp, index):
         return None
@@ -103,7 +102,7 @@ class Tester(object):
 
             logger.info("<--<-- {} --- {} -->-->".format(index, cls))
             try:
-                _oper = cls(conv=self.conv, io=self.io, sh=self.sh,
+                _oper = cls(conv=self.conv, inut=self.inut, sh=self.sh,
                             profile=self.profile, test_id=test_id, conf=conf,
                             funcs=funcs, check_factory=self.check_factory,
                             cache=self.cache)
@@ -112,20 +111,19 @@ class Tester(object):
                 resp = _oper()
             except Exception as err:
                 self.sh.session["index"] = index
-                return self.io.err_response(self.sh.session, "run_sequence",
+                return self.inut.err_response(self.sh.session, "run_sequence",
                                             err)
             else:
                 self.conv.trace.response(self.conv.events.last_item(EV_RESPONSE))
                 resp = self.handle_response(resp, index)
                 if resp:
-                    return self.io.respond(resp)
+                    return self.inut.respond(resp)
 
             index += 1
 
         try:
             if self.conv.flow["assert"]:
-                _ver = Verify(self.check_factory, self.conv.msg_factory,
-                              self.conv)
+                _ver = Verify(self.check_factory, self.conv)
                 _ver.test_sequence(self.conv.flow["tests"])
         except KeyError:
             pass
@@ -135,7 +133,7 @@ class Tester(object):
         if isinstance(_oper, Done):
             self.conv.events.store(EV_CONDITION, State(END_TAG, status=OK))
 
-        self.io.dump_log(self.sh.session, test_id)
+        self.inut.dump_log(self.sh.session, test_id)
         return True
 
 
@@ -147,18 +145,18 @@ class WebTester(Tester):
     def display_test_list(self):
         try:
             if self.sh.session_init():
-                return self.io.flow_list(self.sh.session)
+                return self.inut.flow_list(self.sh.session)
             else:
                 try:
                     resp = Redirect("%sopresult#%s" % (
-                        self.io.conf.BASE, self.sh.session["testid"][0]))
+                        self.inut.conf.BASE, self.sh.session["testid"][0]))
                 except KeyError:
-                    return self.io.flow_list(self.sh.session)
+                    return self.inut.flow_list(self.sh.session)
                 else:
-                    return resp(self.io.environ, self.io.start_response)
+                    return resp(self.inut.environ, self.inut.start_response)
         except Exception as err:
             exception_trace("display_test_list", err)
-            return self.io.err_response(self.sh.session, "session_setup", err)
+            return self.inut.err_response(self.sh.session, "session_setup", err)
 
     def set_profile(self, environ):
         info = parse_qs(get_post(environ))
@@ -199,9 +197,9 @@ class WebTester(Tester):
 
             # reset all test flows
             self.sh.reset_session(profile=".".join(cp))
-            return self.io.flow_list(self.sh.session)
+            return self.inut.flow_list(self.sh.session)
         except Exception as err:
-            return self.io.err_response(self.sh.session, "profile", err)
+            return self.inut.err_response(self.sh.session, "profile", err)
 
     def _setup(self, test_id, cinfo, **kw_args):
         redirs = get_redirect_uris(cinfo)
@@ -226,15 +224,15 @@ class WebTester(Tester):
             return self.run_flow(test_id, kw_args["conf"])
         except Exception as err:
             exception_trace("", err, logger)
-            #self.io.dump_log(self.sh.session, test_id)
-            return self.io.err_response(self.sh.session, "run", err)
+            #self.inut.dump_log(self.sh.session, test_id)
+            return self.inut.err_response(self.sh.session, "run", err)
 
     def handle_response(self, resp, index):
         if resp:
             self.sh.session["index"] = index
             if isinstance(resp, Response):
                 self.conv.events.store(EV_HTTP_RESPONSE, resp)
-                return resp(self.io.environ, self.io.start_response)
+                return resp(self.inut.environ, self.inut.start_response)
             else:
                 return resp
         else:
@@ -244,7 +242,7 @@ class WebTester(Tester):
         sess = self.sh.session
         sess['node'].complete = complete
         sess['node'].state = eval_state(sess['conv'].events)
-        self.io.dump_log(sess, test_id)
+        self.inut.dump_log(sess, test_id)
 
     def run_flow(self, test_id, conf=None, index=0):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
@@ -267,7 +265,7 @@ class WebTester(Tester):
 
             logger.info("<--<-- {} --- {} -->-->".format(index, cls))
             try:
-                _oper = cls(conv=self.conv, io=self.io, sh=self.sh,
+                _oper = cls(conv=self.conv, inut=self.inut, sh=self.sh,
                             profile=self.profile,test_id=test_id, conf=conf,
                             funcs=funcs, check_factory=self.check_factory,
                             cache=self.cache)
@@ -277,19 +275,18 @@ class WebTester(Tester):
             except Break:
                 break
             except Exception as err:
-                return self.io.err_response(self.sh.session, "run_sequence",
+                return self.inut.err_response(self.sh.session, "run_sequence",
                                             err)
             else:
                 rsp = self.handle_response(resp, index)
                 if rsp:
-                    return self.io.respond(rsp)
+                    return self.inut.respond(rsp)
 
             index += 1
 
         try:
             if self.conv.flow["assert"]:
-                _ver = Verify(self.check_factory, self.conv.msg_factory,
-                              self.conv)
+                _ver = Verify(self.check_factory, self.conv)
                 _ver.test_sequence(self.conv.flow["assert"])
         except KeyError:
             pass
@@ -297,8 +294,8 @@ class WebTester(Tester):
             raise
 
         if isinstance(_oper, Done):
-            self.conv.events.store(EV_CONDITION, State('done', status=OK))
-            self.store_state(test_id, complete=True)
+            self.conv.events.store(EV_CONDITION, State('Done', status=OK))
+            self.inut.dump_log(self.sh.session, test_id)
 
     def cont(self, environ, ENV):
         query = parse_qs(environ["QUERY_STRING"])
@@ -310,7 +307,7 @@ class WebTester(Tester):
         except KeyError:  # Cookie delete broke session
             self._setup(path, **ENV)
         except Exception as err:
-            return self.io.err_response(self.sh.session, "session_setup", err)
+            return self.inut.err_response(self.sh.session, "session_setup", err)
         else:
             self.conv = self.sh.session["conv"]
 
@@ -320,8 +317,8 @@ class WebTester(Tester):
             return self.run_flow(path, ENV["conf"], index)
         except Exception as err:
             exception_trace("", err, logger)
-            self.io.dump_log(self.sh.session, path)
-            return self.io.err_response(self.sh.session, "run", err)
+            self.inut.dump_log(self.sh.session, path)
+            return self.inut.err_response(self.sh.session, "run", err)
 
     def async_response(self, conf):
         index = self.sh.session["index"]
@@ -335,7 +332,7 @@ class WebTester(Tester):
 
         logger.info("<--<-- {} --- {}".format(index, cls))
         resp = self.conv.operation.parse_response(self.sh.session["testid"],
-                                                  self.io, self.message_factory)
+                                                  self.inut, self.message_factory)
         if resp:
             return resp
 

@@ -59,8 +59,8 @@ class SyncRequest(Request):
     accept = None
     _tests = {"post": [], "pre": []}
 
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        Operation.__init__(self, conv, inut, sh, **kwargs)
         self.conv.req = self
         self.tests = copy.deepcopy(self._tests)
         self.request = self.conv.msg_factory(self.request_cls)
@@ -187,8 +187,8 @@ class AsyncRequest(Request):
     accept = None
     _tests = {"post": [], "pre": []}
 
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        Operation.__init__(self, conv, inut, sh, **kwargs)
         self.conv.req = self
         self.trace = conv.trace
         self.tests = copy.deepcopy(self._tests)
@@ -215,7 +215,7 @@ class AsyncRequest(Request):
         self.conv.events.store(EV_URL, url)
         return Redirect(str(url))
 
-    def parse_response(self, path, io, message_factory):
+    def parse_response(self, path, inut, message_factory):
         _ctype = self.response_type
         _conv = self.conv
 
@@ -248,22 +248,22 @@ class AsyncRequest(Request):
 
         # parse the response
         if response_mode == "form_post":
-            info = parse_qs(get_post(io.environ))
+            info = parse_qs(get_post(inut.environ))
             _ctype = "dict"
         elif response_where == "url":
-            info = io.environ["QUERY_STRING"]
+            info = inut.environ["QUERY_STRING"]
             _ctype = "urlencoded"
         elif response_where == "fragment":
-            query = parse_qs(get_post(io.environ))
+            query = parse_qs(get_post(inut.environ))
             try:
                 info = query["fragment"][0]
             except KeyError:
-                return io.sorry_response(io.conf.BASE, "missing fragment ?!")
+                return inut.sorry_response(inut.conf.BASE, "missing fragment ?!")
         elif response_where == "":
-            info = io.environ["QUERY_STRING"]
+            info = inut.environ["QUERY_STRING"]
             _ctype = "urlencoded"
         else:  # resp_c.where == "body"
-            info = get_post(io.environ)
+            info = get_post(inut.environ)
 
         logger.info("Response: %s" % info)
 
@@ -276,9 +276,9 @@ class AsyncRequest(Request):
                 resp_cls, info, _ctype, self.csi["state"],
                 keyjar=_conv.entity.keyjar)
         except ResponseError as err:
-            return io.err_response(self.sh.session, "run_sequence", err)
+            return inut.err_response(self.sh.session, "run_sequence", err)
         except Exception as err:
-            return io.err_response(self.sh.session, "run_sequence", err)
+            return inut.err_response(self.sh.session, "run_sequence", err)
 
         logger.info("Parsed response: %s" % response.to_dict())
 

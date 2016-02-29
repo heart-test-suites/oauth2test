@@ -18,7 +18,8 @@ from aatest.operation import request_with_client_http_session
 
 from oic.extension.message import TokenIntrospectionResponse
 
-from oic.oauth2 import rndstr, ErrorResponse
+from oic import rndstr
+from oic.oauth2 import ErrorResponse
 from oic.oauth2.message import AccessTokenResponse
 from oic.extension.client import ClientInfoResponse
 from oic.oic import ProviderConfigurationResponse

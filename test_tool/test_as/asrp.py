@@ -10,7 +10,6 @@ import argparse
 import logging
 import sys
 
-from aatest.io import IO
 from aatest.parse_cnf import parse_json_conf
 from aatest.parse_cnf import parse_yaml_conf
 from aatest.utils import setup_logging
@@ -75,12 +74,15 @@ def application(environ, start_response):
 
     webenv = session._params['webenv']
 
+    try:
+        sh = session['session_info']
+    except KeyError:
+        sh = SessionHandler(**webenv)
+        sh.session_init()
 
-    inut = WebIO(**webenv)
+    inut = WebIO(session=sh, **webenv)
     inut.environ = environ
     inut.start_response = start_response
-
-    sh = SessionHandler(session, **webenv)
 
     tester = WebTester(inut, sh, **webenv)
     tester.check_factory = get_check
@@ -94,10 +96,9 @@ def application(environ, start_response):
         return inut.static(path)
     elif path.startswith("export/"):
         return inut.static(path)
+
     if path == "":  # list
         return tester.display_test_list()
-    elif "flow_names" not in session:
-        sh.session_init()
 
     if path == "logs":
         return inut.display_log("log", issuer="", profile="", testid="")
@@ -125,19 +126,19 @@ def application(environ, start_response):
         return inut.static(path)
 
     if path == "reset":
-        sh.reset_session(sh.session)
-        return inut.flow_list(session)
+        sh.reset_session()
+        return inut.flow_list()
     elif path == "pedit":
         try:
-            return inut.profile_edit(session)
+            return inut.profile_edit()
         except Exception as err:
-            return inut.err_response(session, "pedit", err)
+            return inut.err_response("pedit", err)
     elif path == "profile":
         return tester.set_profile(environ)
     elif path.startswith("test_info"):
         p = path.split("/")
         try:
-            return inut.test_info(p[1], sh.session)
+            return inut.test_info(p[1])
         except KeyError:
             return inut.not_found()
     elif path == "continue":
@@ -146,17 +147,18 @@ def application(environ, start_response):
         if tester.conv is None:
             return inut.sorry_response("", "No result to report")
 
-        return inut.opresult(tester.conv, sh.session)
+        return inut.opresult(tester.conv)
     # expected path format: /<testid>[/<endpoint>]
-    elif path in session["flow_names"]:
+    elif path in sh["flow_names"]:
         resp = tester.run(path, **webenv)
+        session['session_info'] = inut.session
         if resp:
             return resp
         else:
-            return inut.flow_list(session)
+            return inut.flow_list()
     elif path in ["authz_cb", "authz_post"]:
         if path == "authz_cb":
-            _conv = session["conv"]
+            _conv = sh["conv"]
             try:
                 response_mode = _conv.req.req_args["response_mode"]
             except KeyError:
@@ -191,13 +193,13 @@ def application(environ, start_response):
         try:
             resp = tester.async_response(webenv["conf"])
         except Exception as err:
-            return inut.err_response(session, "authz_cb", err)
+            return inut.err_response("authz_cb", err)
         else:
             if resp:
                 return resp
             else:
                 try:
-                    return inut.flow_list(session)
+                    return inut.flow_list()
                 except Exception as err:
                     LOGGER.error(err)
                     raise

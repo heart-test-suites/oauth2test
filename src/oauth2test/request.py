@@ -276,9 +276,9 @@ class AsyncRequest(Request):
                 resp_cls, info, _ctype, self.csi["state"],
                 keyjar=_conv.entity.keyjar)
         except ResponseError as err:
-            return inut.err_response(self.sh.session, "run_sequence", err)
+            return inut.err_response("run_sequence", err)
         except Exception as err:
-            return inut.err_response(self.sh.session, "run_sequence", err)
+            return inut.err_response("run_sequence", err)
 
         logger.info("Parsed response: %s" % response.to_dict())
 

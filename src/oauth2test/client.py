@@ -9,8 +9,8 @@ class Client(client.Client):
         self.conv = None
 
     def store_response(self, clinst, text):
-        ref = self.conv.events.store(EV_PROTOCOL_RESPONSE, clinst)
-        self.conv.events.store(EV_RESPONSE, text, ref=ref)
+        ref = self.event_store.store(EV_PROTOCOL_RESPONSE, clinst)
+        self.event_store.store(EV_RESPONSE, text, ref=ref)
 
 
 def make_client(**kw_args):

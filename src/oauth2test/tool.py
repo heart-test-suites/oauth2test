@@ -2,15 +2,16 @@ import logging
 from urllib.parse import parse_qs
 
 from aatest import exception_trace
-from aatest import END_TAG
 from aatest import Break
 from aatest.check import State
 from aatest.check import OK
 from aatest.events import EV_CONDITION
 from aatest.events import EV_HTTP_RESPONSE
-from aatest.events import EV_RESPONSE
 from aatest.io import eval_state
+from aatest.io import safe_path
 from aatest.session import Done
+from aatest.summation import store_test_state
+from aatest.tool import Tester
 from aatest.verify import Verify
 
 from oic.utils.http_util import Redirect
@@ -22,7 +23,6 @@ from oauth2test import Trace
 
 from oauth2test.client import make_client
 from oauth2test.conversation import Conversation
-from oauth2test.utils import get_check
 
 __author__ = 'roland'
 
@@ -36,107 +36,6 @@ def get_redirect_uris(cinfo):
         return cinfo["registered"]["redirect_uris"]
 
 
-class Tester(object):
-    def __init__(self, inut, sh, profiles, profile, flows,
-                 msg_factory=None, cache=None, **kwargs):
-        self.inut = inut
-        self.sh = sh
-        self.profiles = profiles
-        self.profile = profile
-        self.flows = flows
-        self.check_factory = get_check
-        self.message_factory = msg_factory
-        self.cache = cache
-        self.kwargs = kwargs
-        self.conv = None
-
-    def match_profile(self, test_id):
-        _spec = self.flows[test_id]
-        return set(self.profile) == set(_spec["profile"])
-
-    def run(self, test_id, cinfo, **kw_args):
-        if not self.match_profile(test_id):
-            logger.info("Test doesn't match the profile")
-            return False
-
-        redirs = get_redirect_uris(cinfo)
-
-        self.sh.session_setup(path=test_id)
-        _flow = self.flows[test_id]
-        _cli = make_client(**kw_args)
-        self.conv = Conversation(_flow, _cli,
-                                 msg_factory=kw_args["msg_factory"],
-                                 callback_uris=redirs, trace_cls=Trace)
-        _cli.conv = self.conv
-        self.conv.sequence = self.sh.session["sequence"]
-        self.sh.session["conv"] = self.conv
-
-        # noinspection PyTypeChecker
-        try:
-            return self.run_flow(test_id, kw_args["conf"])
-        except Exception as err:
-            exception_trace("", err, logger)
-            self.inut.dump_log(self.sh.session, test_id)
-            return self.inut.err_response(self.sh.session, "run", err)
-
-    def handle_response(self, resp, index):
-        return None
-
-    def run_flow(self, test_id, conf=None, index=0):
-        logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
-        _ss = self.sh.session
-        _ss["node"].complete = False
-        self.conv.test_id = test_id
-        self.conv.conf = conf
-
-        if index >= len(self.conv.sequence):
-            return None
-
-        _oper = None
-        for item in self.conv.sequence[index:]:
-            if isinstance(item, tuple):
-                cls, funcs = item
-            else:
-                cls = item
-                funcs = {}
-
-            logger.info("<--<-- {} --- {} -->-->".format(index, cls))
-            try:
-                _oper = cls(conv=self.conv, inut=self.inut, sh=self.sh,
-                            profile=self.profile, test_id=test_id, conf=conf,
-                            funcs=funcs, check_factory=self.check_factory,
-                            cache=self.cache)
-                self.conv.operation = _oper
-                _oper.setup(self.profiles.PROFILEMAP)
-                resp = _oper()
-            except Exception as err:
-                self.sh.session["index"] = index
-                return self.inut.err_response(self.sh.session, "run_sequence",
-                                            err)
-            else:
-                self.conv.trace.response(self.conv.events.last_item(EV_RESPONSE))
-                resp = self.handle_response(resp, index)
-                if resp:
-                    return self.inut.respond(resp)
-
-            index += 1
-
-        try:
-            if self.conv.flow["assert"]:
-                _ver = Verify(self.check_factory, self.conv)
-                _ver.test_sequence(self.conv.flow["tests"])
-        except KeyError:
-            pass
-        except Exception as err:
-            raise
-
-        if isinstance(_oper, Done):
-            self.conv.events.store(EV_CONDITION, State(END_TAG, status=OK))
-
-        self.inut.dump_log(self.sh.session, test_id)
-        return True
-
-
 class ClTester(Tester):
     pass
 
@@ -145,23 +44,23 @@ class WebTester(Tester):
     def display_test_list(self):
         try:
             if self.sh.session_init():
-                return self.inut.flow_list(self.sh.session)
+                return self.inut.flow_list()
             else:
                 try:
                     resp = Redirect("%sopresult#%s" % (
-                        self.inut.conf.BASE, self.sh.session["testid"][0]))
+                        self.inut.conf.BASE, self.sh["testid"][0]))
                 except KeyError:
-                    return self.inut.flow_list(self.sh.session)
+                    return self.inut.flow_list()
                 else:
                     return resp(self.inut.environ, self.inut.start_response)
         except Exception as err:
             exception_trace("display_test_list", err)
-            return self.inut.err_response(self.sh.session, "session_setup", err)
+            return self.inut.err_response("session_setup", err)
 
     def set_profile(self, environ):
         info = parse_qs(get_post(environ))
         try:
-            cp = self.sh.session["profile"].split(".")
+            cp = self.sh["profile"].split(".")
             cp[0] = info["rtype"][0]
 
             crsu = []
@@ -197,39 +96,29 @@ class WebTester(Tester):
 
             # reset all test flows
             self.sh.reset_session(profile=".".join(cp))
-            return self.inut.flow_list(self.sh.session)
+            return self.inut.flow_list()
         except Exception as err:
-            return self.inut.err_response(self.sh.session, "profile", err)
+            return self.inut.err_response("profile", err)
 
-    def _setup(self, test_id, cinfo, **kw_args):
+    def setup(self, test_id, cinfo, **kw_args):
         redirs = get_redirect_uris(cinfo)
 
         _flow = self.flows[test_id]
         _cli = make_client(**kw_args)
         self.conv = Conversation(_flow, _cli, kw_args["msg_factory"],
                                  trace_cls=Trace, callback_uris=redirs)
-        _cli.conv = self.conv
+        #_cli.conv = self.conv
         _cli.event_store = self.conv.events
         # since webfinger is not used
         self.conv.info['issuer'] = kw_args['conf'].INFO["srv_discovery_url"]
         self.sh.session_setup(path=test_id)
-        self.sh.session["conv"] = self.conv
-        self.conv.sequence = self.sh.session["sequence"]
+        self.sh["conv"] = self.conv
+        self.conv.sequence = self.sh["sequence"]
+        return True
 
-    def run(self, test_id, cinfo, **kw_args):
-        self._setup(test_id, cinfo, **kw_args)
-
-        # noinspection PyTypeChecker
-        try:
-            return self.run_flow(test_id, kw_args["conf"])
-        except Exception as err:
-            exception_trace("", err, logger)
-            #self.inut.dump_log(self.sh.session, test_id)
-            return self.inut.err_response(self.sh.session, "run", err)
-
-    def handle_response(self, resp, index):
+    def handle_response(self, resp, index, oper=None):
         if resp:
-            self.sh.session["index"] = index
+            self.sh["index"] = index
             if isinstance(resp, Response):
                 self.conv.events.store(EV_HTTP_RESPONSE, resp)
                 return resp(self.inut.environ, self.inut.start_response)
@@ -239,15 +128,22 @@ class WebTester(Tester):
             return None
 
     def store_state(self, test_id, complete):
-        sess = self.sh.session
+        sess = self.sh
         sess['node'].complete = complete
         sess['node'].state = eval_state(sess['conv'].events)
-        self.inut.dump_log(sess, test_id)
+        self.inut.print_info(sess, test_id)
 
-    def run_flow(self, test_id, conf=None, index=0):
+    def fname(self, test_id):
+        try:
+            return safe_path(
+                self.conv.entity.provider_info['issuer'],
+                self.profile, test_id)
+        except KeyError:
+            return None
+
+    def run_flow(self, test_id, index=0, profiles=None, conf=None):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
-        _ss = self.sh.session
-        _ss["node"].complete = False
+        self.sh["node"].complete = False
         self.conv.test_id = test_id
         self.conv.conf = conf
 
@@ -256,7 +152,7 @@ class WebTester(Tester):
 
         _oper = None
         for item in self.conv.sequence[index:]:
-            self.sh.session["index"] = index
+            self.sh["index"] = index
             if isinstance(item, tuple):
                 cls, funcs = item
             else:
@@ -267,26 +163,29 @@ class WebTester(Tester):
             try:
                 _oper = cls(conv=self.conv, inut=self.inut, sh=self.sh,
                             profile=self.profile,test_id=test_id, conf=conf,
-                            funcs=funcs, check_factory=self.check_factory,
+                            funcs=funcs, check_factory=self.chk_factory,
                             cache=self.cache)
                 self.conv.operation = _oper
-                _oper.setup(self.profiles.PROFILEMAP)
+                _oper.setup(self.map_prof)
                 resp = _oper()
             except Break:
                 break
             except Exception as err:
-                return self.inut.err_response(self.sh.session, "run_sequence",
-                                            err)
+                self.inut.store_test_info()
+                store_test_state(self.sh, self.conv.events)
+                return self.inut.err_response("run_sequence", err)
             else:
                 rsp = self.handle_response(resp, index)
                 if rsp:
+                    self.inut.store_test_info()
+                    store_test_state(self.sh, self.conv.events)
                     return self.inut.respond(rsp)
 
             index += 1
 
         try:
             if self.conv.flow["assert"]:
-                _ver = Verify(self.check_factory, self.conv)
+                _ver = Verify(self.chk_factory, self.conv)
                 _ver.test_sequence(self.conv.flow["assert"])
         except KeyError:
             pass
@@ -295,7 +194,12 @@ class WebTester(Tester):
 
         if isinstance(_oper, Done):
             self.conv.events.store(EV_CONDITION, State('Done', status=OK))
-            self.inut.dump_log(self.sh.session, test_id)
+            self.inut.store_test_info()
+            store_test_state(self.sh, self.conv.events)
+            self.inut.print_info(test_id, self.fname(test_id))
+        else:
+            self.inut.store_test_info()
+            store_test_state(self.sh, self.conv.events)
 
     def cont(self, environ, ENV):
         query = parse_qs(environ["QUERY_STRING"])
@@ -303,13 +207,13 @@ class WebTester(Tester):
         index = int(query["index"][0])
 
         try:
-            index = self.sh.session["index"]
+            index = self.sh["index"]
         except KeyError:  # Cookie delete broke session
-            self._setup(path, **ENV)
+            self.setup(path, **ENV)
         except Exception as err:
-            return self.inut.err_response(self.sh.session, "session_setup", err)
+            return self.inut.err_response("session_setup", err)
         else:
-            self.conv = self.sh.session["conv"]
+            self.conv = self.sh["conv"]
 
         index += 1
 
@@ -317,13 +221,13 @@ class WebTester(Tester):
             return self.run_flow(path, ENV["conf"], index)
         except Exception as err:
             exception_trace("", err, logger)
-            self.inut.dump_log(self.sh.session, path)
-            return self.inut.err_response(self.sh.session, "run", err)
+            self.inut.print_info(path)
+            return self.inut.err_response("run", err)
 
     def async_response(self, conf):
-        index = self.sh.session["index"]
-        item = self.sh.session["sequence"][index]
-        self.conv = self.sh.session["conv"]
+        index = self.sh["index"]
+        item = self.sh["sequence"][index]
+        self.conv = self.sh["conv"]
 
         if isinstance(item, tuple):
             cls, funcs = item
@@ -331,11 +235,11 @@ class WebTester(Tester):
             cls = item
 
         logger.info("<--<-- {} --- {}".format(index, cls))
-        resp = self.conv.operation.parse_response(self.sh.session["testid"],
+        resp = self.conv.operation.parse_response(self.sh["testid"],
                                                   self.inut, self.message_factory)
         if resp:
             return resp
 
         index += 1
 
-        return self.run_flow(self.sh.session["testid"], index=index)
+        return self.run_flow(self.sh["testid"], index=index)

@@ -11,6 +11,7 @@ from aatest.events import EV_CONDITION
 from aatest.events import EV_RESPONSE
 from aatest.tool import get_redirect_uris
 from oic.extension.client import make_software_statement
+from oic.utils.keyio import KeyBundle
 from oauth2test.check import get_id_tokens
 from aatest.check import ERROR
 
@@ -309,7 +310,7 @@ def set_req_arg_token(oper, arg):
     oper.req_args['token'] = getattr(oper._token, arg)
 
 
-def modify_redirect_uri(oper,arg):
+def modify_redirect_uri(oper, arg):
     ru = oper.conv.entity.redirect_uris[0]
     p = urlparse(ru)
     oper.req_args['redirect_uri'] = '{}://{}/{}'.format(p.scheme, p.netloc, arg)
@@ -319,7 +320,12 @@ def add_software_statement(oper, arg):
     argkeys = list(arg.keys())
     kwargs = {}
 
-    iss = arg['iss']
+    tre = oper.conf.TRUSTED_REGISTRATION_ENTITY
+    iss = tre['iss']
+    kb = KeyBundle()
+    kb.imp_jwks = json.load(open(tre['jwks']))
+    kb.do_keys(kb.imp_jwks['keys'])
+    oper.conv.entity.keyjar.add_kb(iss, kb)
 
     if arg['redirect_uris'] is None:
         kwargs['redirect_uris'] = oper.conv.entity.redirect_uris
@@ -335,7 +341,8 @@ def add_software_statement(oper, arg):
         argkeys.remove('jwks_uri')
     elif 'jwks' in argkeys:
         if arg['jwks'] is None:
-            kwargs['jwks'] = {"keys": oper.conv.entity.keyjar.dump_issuer_keys("")}
+            kwargs['jwks'] = {
+                "keys": oper.conv.entity.keyjar.dump_issuer_keys("")}
         else:
             kwargs['jwks'] = arg['jwks']
         argkeys.remove('jwks')
@@ -344,7 +351,7 @@ def add_software_statement(oper, arg):
         kwargs[a] = arg[a]
 
     oper.req_args['software_statement'] = make_software_statement(
-        oper.conv.client.keyjar, iss, **kwargs)
+        oper.conv.entity.keyjar, iss=iss, owner=iss, **kwargs)
 
 
 def factory(name):

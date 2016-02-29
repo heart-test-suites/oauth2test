@@ -1,5 +1,6 @@
 import logging
 import os
+
 from urllib.parse import unquote
 
 from aatest import exception_trace
@@ -10,7 +11,6 @@ from aatest.log import with_or_without_slash
 
 from oic.utils.http_util import NotFound
 from oic.utils.http_util import Response
-from oic.utils.time_util import in_a_while
 
 from aatest.check import ERROR
 from aatest.check import OK
@@ -19,8 +19,6 @@ from aatest.check import INCOMPLETE
 from aatest.check import State
 from aatest.summation import represent_result
 from aatest.summation import store_test_state
-from aatest.summation import condition
-from aatest.summation import trace_output
 from aatest.utils import get_test_info
 
 from oauth2test.utils import get_profile_info
@@ -35,29 +33,28 @@ TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
 
 class WebIO(IO):
     def __init__(self, conf, flows, desc, profile_handler, profile, lookup,
-                 cache=None, environ=None, start_response=None, **kwargs):
+                 cache=None, environ=None, start_response=None, session=None,
+                 **kwargs):
         IO.__init__(self, flows, profile, desc, profile_handler, cache,
-                    **kwargs)
-        # IO.__init__(self, flows=flows, profile=profile, profiles=profiles,
-        #             operation=operation, desc=desc, **kwargs)
+                    session=session, **kwargs)
+
         self.conf = conf
         self.lookup = lookup
         self.environ = environ
         self.start_response = start_response
 
-    @staticmethod
-    def store_test_info(session, profile_info=None):
-        _conv = session["conv"]
+    def store_test_info(self, profile_info=None):
+        _conv = self.session["conv"]
         _info = {
             "trace": _conv.trace,
             "events": _conv.events,
-            "index": session["index"],
-            "seqlen": len(session["sequence"]),
-            "descr": session["node"].desc
+            "index": self.session["index"],
+            "seqlen": len(self.session["sequence"]),
+            "descr": self.session["node"].desc
         }
 
         try:
-            _info["node"] = session["node"]
+            _info["node"] = self.session["node"]
         except KeyError:
             pass
 
@@ -65,14 +62,14 @@ class WebIO(IO):
             _info["profile_info"] = profile_info
         else:
             try:
-                _info["profile_info"] = get_profile_info(session,
-                                                         session["testid"])
+                _info["profile_info"] = get_profile_info(self.session,
+                                                         self.session["testid"])
             except KeyError:
                 pass
 
-        session["test_info"][session["testid"]] = _info
+        self.session["test_info"][self.session["testid"]] = _info
 
-    def flow_list(self, session):
+    def flow_list(self):
         try:
             resp = Response(mako_template="flowlist.mako",
                             template_lookup=self.lookup,
@@ -82,16 +79,16 @@ class WebIO(IO):
             raise
 
         try:
-            _tid = session["testid"]
+            _tid = self.session["testid"]
         except KeyError:
             _tid = None
 
-        self.dump_log(session, _tid)
+        self.print_info(self.session, _tid)
 
         argv = {
-            "flows": session["tests"],
-            "profile": session["profile"],
-            "test_info": list(session["test_info"].keys()),
+            "flows": self.session["tests"],
+            "profile": self.session["profile"],
+            "test_info": list(self.session["test_info"].keys()),
             "base": self.conf.BASE,
             "headlines": self.desc,
             "testresults": TEST_RESULTS
@@ -99,20 +96,20 @@ class WebIO(IO):
 
         return resp(self.environ, self.start_response, **argv)
 
-    def profile_edit(self, session):
+    def profile_edit(self):
         resp = Response(mako_template="profile.mako",
                         template_lookup=self.lookup,
                         headers=[])
-        argv = {"profile": session["profile"]}
+        argv = {"profile": self.session["profile"]}
         return resp(self.environ, self.start_response, **argv)
 
-    def test_info(self, testid, session):
+    def test_info(self, testid):
         resp = Response(mako_template="testinfo.mako",
                         template_lookup=self.lookup,
                         headers=[])
 
-        _conv = session["conv"]
-        info = get_test_info(session, testid)
+        _conv = self.session["conv"]
+        info = get_test_info(self.session, testid)
 
         argv = {
             "profile": info["profile_info"],
@@ -203,8 +200,7 @@ class WebIO(IO):
     def display_log(self, root, issuer="", profile="", testid=""):
         logger.info(
             "display_log root: '%s' issuer: '%s', profile: '%s' testid: '%s'"
-            % (
-                root, issuer, profile, testid))
+            % (root, issuer, profile, testid))
         if testid:
             path = os.path.join(root, issuer, profile, testid).replace(":",
                                                                        "%3A")
@@ -257,20 +253,20 @@ class WebIO(IO):
                         name=err_type,
                         message="Error in %s" % where))
 
-    def err_response(self, session, where, err):
+    def err_response(self, where, err):
         if err:
             exception_trace(where, err, logger)
 
-        self.log_fault(session, err, where)
+        self.log_fault(self.session, err, where)
 
         try:
-            _tid = session["testid"]
-            self.dump_log(session, _tid)
-            self.store_test_info(session)
+            _tid = self.session["testid"]
+            self.print_info(self.session, _tid)
+            self.store_test_info(self.session)
         except KeyError:
             pass
 
-        return self.flow_list(session)
+        return self.flow_list()
 
     def sorry_response(self, homepage, err):
         resp = Response(mako_template="sorry.mako",
@@ -280,9 +276,9 @@ class WebIO(IO):
                 "error": str(err)}
         return resp(self.environ, self.start_response, **argv)
 
-    def opresult(self, conv, session):
-        store_test_state(session, conv.events)
-        return self.flow_list(session)
+    def opresult(self, conv):
+        store_test_state(conv.events, self.session)
+        return self.flow_list()
 
     def opresult_fragment(self):
         resp = Response(mako_template="opresult_repost.mako",
@@ -305,29 +301,3 @@ class ClIO(IO):
     def flow_list(self, session):
         pass
 
-    def dump_log(self, session, test_id):
-        try:
-            _conv = session["conv"]
-        except KeyError:
-            pass
-        else:
-            _pi = get_profile_info(session, test_id)
-            if _pi:
-                sline = 60 * "="
-                output = ["%s: %s" % (k, _pi[k]) for k in
-                          ["Issuer", "Profile",
-                           "Test ID"]]
-                output.append("Timestamp: %s" % in_a_while())
-                output.extend(["", sline, ""])
-                output.extend(trace_output(_conv.trace))
-                output.extend(["", sline, ""])
-                output.extend(condition(_conv.events))
-                output.extend(["", sline, ""])
-                # and lastly the result
-                output.append(
-                    "RESULT: %s" % represent_result(_conv.events))
-                output.append("")
-
-                txt = "\n".join(output)
-
-                print(txt)

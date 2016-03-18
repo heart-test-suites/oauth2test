@@ -2,9 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RP test tool</title>
+  <title>RP test site</title>
 </head>
 <body>
-<ul><li><a href="{target}">RP</a></li></ul>
+<form action="rp" method="get">
+  <input type="hidden" name="session" value="abcde">
+  Start page:<br>
+  <input type="text" name="start_page"><br>
+  Query parameter:<br>
+  <input type="text" name="params">
+  <input type="submit" value="Submit">
+</form>
 </body>
 </html>

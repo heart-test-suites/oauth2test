@@ -1,5 +1,6 @@
 import json
 import time
+from aatest.events import EV_PROTOCOL_REQUEST
 from future.backports.urllib.parse import parse_qs
 
 from Crypto.PublicKey import RSA
@@ -9,8 +10,8 @@ from jwkest.jwk import ECKey
 from jwkest.jwk import SYMKey
 from oic.extension import provider
 from oic.extension.client import RegistrationRequest
-from oic.extension.message import ASConfigurationResponse
 from oic.oauth2.message import AccessTokenRequest
+from oic.oauth2.message import ASConfigurationResponse
 from oic.utils.keyio import keyjar_init
 
 __author__ = 'roland'
@@ -33,12 +34,15 @@ class Provider(provider.Provider):
     def __init__(self, name, sdb, cdb, authn_broker, userinfo, authz,
                  client_authn, symkey, urlmap=None, ca_certs="", keyjar=None,
                  hostname="", template_lookup=None, template=None,
-                 verify_ssl=True, capabilities=None, event_db=None, **kwargs):
+                 verify_ssl=True, capabilities=None, event_db=None,
+                 config=None, **kwargs):
 
         provider.Provider.__init__(
-            self, name, sdb, cdb, authn_broker, userinfo, authz, client_authn,
-            symkey, urlmap, ca_certs, keyjar, hostname, template_lookup,
-            template, verify_ssl, capabilities, **kwargs)
+            self, name, sdb, cdb, authn_broker, authz=authz,
+            client_authn=client_authn, symkey=symkey, urlmap=urlmap,
+            ca_bundle=ca_certs, keyjar=keyjar, hostname=hostname,
+            verify_ssl=verify_ssl, capabilities=capabilities, config=config,
+            **kwargs)
 
         self.claims_type = ["normal"]
         self.behavior_type = []
@@ -48,6 +52,10 @@ class Provider(provider.Provider):
         self.update_key_use = ""
         self.trace = None
         self.events = event_db
+        self.userinfo = userinfo
+        self.template_lookup = template_lookup
+        self.template = template
+        self.strict = False
 
     def create_providerinfo(self, pcr_class=ASConfigurationResponse,
                             setup=None):
@@ -59,12 +67,7 @@ class Provider(provider.Provider):
 
         return _response
 
-    def registration_endpoint(self, request, authn=None, **kwargs):
-        try:
-            reg_req = RegistrationRequest().deserialize(request, "json")
-        except ValueError:
-            reg_req = RegistrationRequest().deserialize(request)
-
+    def check_scheme(self, reg_req):
         # Do initial verification that all endpoints from the client uses https
         for endp in ["redirect_uris", "jwks_uri", "initiate_login_uri"]:
             try:
@@ -79,6 +82,20 @@ class Provider(provider.Provider):
                     return self._error(
                         error="invalid_configuration_parameter",
                         descr="Non-HTTPS endpoint in '{}'".format(endp))
+
+
+    def registration_endpoint(self, request, authn=None, **kwargs):
+        try:
+            reg_req = RegistrationRequest().deserialize(request, "json")
+        except ValueError:
+            reg_req = RegistrationRequest().deserialize(request)
+
+        self.events.store(EV_PROTOCOL_REQUEST, reg_req)
+
+        if self.strict:
+            resp = self.check_scheme(reg_req)
+            if resp:
+                return resp
 
         _response = provider.Provider.registration_endpoint(
             self, request=request, authn=authn, **kwargs)
@@ -97,30 +114,6 @@ class Provider(provider.Provider):
 
     def authorization_endpoint(self, request="", cookie=None, **kwargs):
         _req = parse_qs(request)
-
-        try:
-            _scope = _req["scope"]
-        except KeyError:
-            return self._error(
-                error="incorrect_behavior",
-                descr="No scope parameter"
-            )
-        else:
-            # verify that openid is among the scopes
-            _scopes = _scope[0].split(" ")
-            if "openid" not in _scopes:
-                return self._error(
-                    error="incorrect_behavior",
-                    descr="Scope does not contain 'openid'"
-                )
-
-        client_id = _req["client_id"][0]
-        if 'id_token' in _scopes:
-            try:
-                self._update_client_keys(client_id)
-            except TestError:
-                return self._error(error="incorrect_behavior",
-                                   descr="No change in client keys")
 
         _response = provider.Provider.authorization_endpoint(self, request,
                                                              cookie, **kwargs)
@@ -147,6 +140,9 @@ class Provider(provider.Provider):
             return self._error(error="incorrect_behavior",
                                descr="Failed to verify client")
 
+        if self.events:
+            self.events.store(EV_PROTOCOL_REQUEST, req)
+
         try:
             self._update_client_keys(client_id)
         except TestError:
@@ -168,7 +164,7 @@ class Provider(provider.Provider):
             keys = [rsa_key.serialize(private=True),
                     ec_key.serialize(private=True)]
             new_keys = {"keys": keys}
-            self.do_key_rollover(new_keys, "%d")
+            #self.do_key_rollover(new_keys, "%d")
 
             signing_keys = [k.to_dict() for k in self.keyjar.get_signing_key()]
             new_keys["keys"].extend(signing_keys)
@@ -177,7 +173,8 @@ class Provider(provider.Provider):
             alg = mode["sign_alg"]
             if not alg:
                 alg = "RS256"
-            keys = [k.to_dict() for kb in self.keyjar[""] for k in list(kb.keys())]
+            keys = [k.to_dict() for kb in self.keyjar[""] for k in
+                    list(kb.keys())]
             for key in keys:
                 if key["use"] == "sig" and key["kty"].startswith(alg[:2]):
                     key.pop("kid", None)
@@ -186,7 +183,8 @@ class Provider(provider.Provider):
             raise Exception(
                 "Did not find sig {} key for nokid1jwk test ".format(alg))
         else:  # Return all keys
-            keys = [k.to_dict() for kb in self.keyjar[""] for k in list(kb.keys())]
+            keys = [k.to_dict() for kb in self.keyjar[""] for k in
+                    list(kb.keys())]
             jwks = dict(keys=keys)
             return json.dumps(jwks)
 

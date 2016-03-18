@@ -1,4 +1,31 @@
 # -*- coding: utf-8 -*-
+from otest.parse_conf import parse_json_conf
+from otest.setup import main_setup
+from oauth2test.check import rp_check
+
+from oic.extension.message import ServerMetadata
+from oic.extension.provider import ClientInfoEndpoint
+from oic.extension.provider import RevocationEndpoint
+from oic.extension.provider import IntrospectionEndpoint
+from oic.extension import message as exp_message
+
+from oic.oauth2 import message
+from oic.oauth2.provider import AuthorizationEndpoint
+from oic.oauth2.provider import TokenEndpoint
+
+from oic.oic.provider import RegistrationEndpoint
+
+from otest.testtool import authorization
+from otest.testtool import clientinfo
+from otest.testtool import revocation
+from otest.testtool import introspection
+from otest.testtool import op_info
+from otest.testtool import webfinger
+from otest.testtool import css
+from otest.testtool import registration
+from otest.testtool import token
+
+from oauth2test.provider import Provider
 
 baseurl = "https://localhost"
 issuer = "%s:%%d/" % baseurl
@@ -85,3 +112,35 @@ USERDB = {
 }
 
 TARGET = 'https://localhost:8666/rp?issuer={}'
+
+BEHAVIOR = {
+    'client_registration': {
+        'assign': {'token_endpoint_auth_method': 'private_key_jwt'}
+    }
+}
+
+
+TOOL_ARGS = {
+    'setup': main_setup,
+    'check': rp_check,
+    'provider': Provider,
+    'parse_conf': parse_json_conf,
+    'cls_factories': [message.factory, exp_message.factory],
+    'chk_factories': [rp_check.factory],
+    'func_factories': [],
+    'configuration_response': ServerMetadata,
+    'endpoints': [
+        AuthorizationEndpoint(authorization),
+        TokenEndpoint(token),
+        RegistrationEndpoint(registration),
+        ClientInfoEndpoint(clientinfo),
+        RevocationEndpoint(revocation),
+        IntrospectionEndpoint(introspection)
+    ],
+    'urls': [
+        (r'^.well-known/openid-configuration', op_info),
+        (r'^.well-known/webfinger', webfinger),
+        (r'.+\.css$', css),
+    ]
+}
+

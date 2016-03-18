@@ -1,4 +1,3 @@
-from aatest import prof_util
 
 __author__ = 'roland'
 

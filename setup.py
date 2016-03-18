@@ -20,9 +20,13 @@ from setuptools import setup, find_packages
 
 __author__ = 'roland'
 
+version = ''
+with open('src/oauth2test/__init__.py', 'r') as fd:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+                        fd.read(), re.MULTILINE).group(1)
 
 setup(
-    version = '0.0.1',
+    version=version,
     name="oauth2test",
     description="Test framework for testing OAuth2 Authorization server and "
                 "relaying party implementations in a HEART context",
@@ -44,7 +48,8 @@ setup(
         'pycryptodome',
         'oic',
         'pyjwkest',
-        'future'
+        'future',
+        'entropy'
     ],
     zip_safe=False,
 )

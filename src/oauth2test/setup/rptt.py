@@ -16,10 +16,22 @@ from oic.utils.userinfo import UserInfo
 from oidctest.provider import Provider
 from oidctest.endpoints import add_endpoints
 from oidctest.endpoints import ENDPOINTS
+import csv
 
 LOGGER = logging.getLogger(__name__)
 
 __author__ = 'roland'
+
+
+def read_uri_schemes(filename):
+    csvfile = open(filename, 'r')
+    l = csvfile.readline()
+    l = l.strip()
+    fieldnames = l.split(',')
+    reader = csv.DictReader(csvfile, fieldnames)
+    return dict(
+        [(r['URI Scheme'], '{} {}'.format(r['Description'], r['Reference'])) for
+         r in reader])
 
 
 def main_setup(args, lookup):
@@ -29,7 +41,7 @@ def main_setup(args, lookup):
     config.SERVICE_URL = config.SERVICE_URL % args.port
 
     # Client data base
-    #cdb = shelve.open(config.CLIENT_DB, writeback=True)
+    # cdb = shelve.open(config.CLIENT_DB, writeback=True)
     cdb = {}
 
     ac = AuthnBroker()
@@ -71,6 +83,8 @@ def main_setup(args, lookup):
     else:
         kwargs["verify_ssl"] = True
 
+    uri_schemes = read_uri_schemes('uri-schemes-1.csv')
+
     as_args = {
         "name": config.issuer,
         "cdb": cdb,
@@ -82,7 +96,7 @@ def main_setup(args, lookup):
         "template_lookup": lookup,
         "template": {"form_post": "form_response.mako"},
         "jwks_name": "./static/jwks_{}.json",
-        'event_db': Events()
+        'event_db': Events(),
     }
 
     com_args = {
@@ -97,7 +111,8 @@ def main_setup(args, lookup):
         "symkey": config.SYM_KEY,
         "template_lookup": lookup,
         "template": {"form_post": "form_response.mako"},
-        "jwks_name": "./static/jwks_{}.json"
+        "jwks_name": "./static/jwks_{}.json",
+        'uri_schemes': uri_schemes
     }
 
     op_arg = {}
@@ -109,6 +124,11 @@ def main_setup(args, lookup):
 
     try:
         op_arg["cookie_name"] = config.COOKIENAME
+    except AttributeError:
+        pass
+
+    try:
+        as_args['behavior'] = config.BEHAVIOR
     except AttributeError:
         pass
 
@@ -154,11 +174,11 @@ def main_setup(args, lookup):
         as_args['sdb'] = SessionDB(
             com_args["baseurl"],
             token_factory=JWTToken('T', keyjar=_op.keyjar,
-                                   lifetime={'code': 3600, 'token': 900},
+                                   lt_pattern={'code': 3600, 'token': 900},
                                    iss=_baseurl,
                                    sign_alg='RS256'),
             refresh_token_factory=JWTToken(
-                'R', keyjar=_op.keyjar, lifetime={'': 24 * 3600},
+                'R', keyjar=_op.keyjar, lt_pattern={'': 24 * 3600},
                 iss=_baseurl)
         )
 
@@ -176,4 +196,3 @@ def multi_keys(as_args, key_conf):
     jwks = keyjar_init(_op, key_conf, "m%d")
 
     return {"jwks": jwks, "keys": key_conf}
-

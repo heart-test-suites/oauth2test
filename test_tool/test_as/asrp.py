@@ -50,7 +50,7 @@ try:
     from oic.oic.message import factory as message_factory
     from oic.oauth2 import ResponseError
     from oic.utils import exception_trace
-    from oic.utils.http_util import Redirect
+    from oic.utils.http_util import Redirect, Response
     from oic.utils.http_util import get_post
     from oic.utils.http_util import BadRequest
     from aatest.session import SessionHandler
@@ -86,7 +86,6 @@ def application(environ, start_response):
 
     tester = WebTester(inut, sh, **webenv)
     tester.check_factory = get_check
-    # print(tester.check_factory)
 
     if path == "robots.txt":
         return inut.static("static/robots.txt")

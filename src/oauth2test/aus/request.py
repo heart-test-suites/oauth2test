@@ -12,9 +12,10 @@ from oic.extension.client import ClientInfoResponse
 from oic.extension.message import TokenIntrospectionResponse
 from oic.oic import ProviderConfigurationResponse
 
-from otest.operation import Operation
-from otest.request import Request
-from otest.request import SyncPostRequest
+from otest.aus.operation import Operation
+from otest.aus.request import Request
+from otest.aus.request import SyncPostRequest
+from oauth2test.aus import oper
 
 __author__ = 'roland'
 
@@ -72,6 +73,9 @@ class Registration(Request):
 
 
 class AccessToken(SyncPostRequest):
+    request_cls = "AccessTokenRequest"
+    response_cls = "AccessTokenResponse"
+
     def __init__(self, conv, inut, sh, **kwargs):
         SyncPostRequest.__init__(self, conv, inut, sh, **kwargs)
         self.op_args["state"] = conv.state
@@ -99,6 +103,9 @@ class AccessToken(SyncPostRequest):
 
 
 class TokenIntrospection(SyncPostRequest):
+    request_cls = "TokenIntrospectionRequest"
+    response_cls = "TokenIntrospectionResponse"
+
     def __init__(self, conv, inut, sh, **kwargs):
         SyncPostRequest.__init__(self, conv, inut, sh, **kwargs)
 
@@ -130,6 +137,9 @@ class TokenIntrospection(SyncPostRequest):
 
 
 class TokenRevocation(SyncPostRequest):
+    request_cls = "TokenRevocationRequest"
+    response_cls = "Message"
+
     def __init__(self, conv, inut, sh, **kwargs):
         SyncPostRequest.__init__(self, conv, inut, sh, **kwargs)
 
@@ -170,9 +180,7 @@ def factory(name):
             if name == fname:
                 return obj
 
-    from aatest import operation
-
-    obj = operation.factory(name)
+    obj = oper.factory(name)
     if not obj:
         raise Unknown("Couldn't find the operation: '{}'".format(name))
     return obj

@@ -1,6 +1,5 @@
 import json
 import logging
-import shelve
 import importlib
 import sys
 from aatest.events import Events
@@ -13,9 +12,9 @@ from oic.utils.keyio import keyjar_init
 from oic.utils.sdb import SessionDB
 from oic.utils.userinfo import UserInfo
 
-from oidctest.provider import Provider
-from oidctest.endpoints import add_endpoints
-from oidctest.endpoints import ENDPOINTS
+from oauth2test.rp.provider import Provider
+from otest.rp.endpoints import add_endpoints
+
 import csv
 
 LOGGER = logging.getLogger(__name__)
@@ -135,10 +134,6 @@ def main_setup(args, lookup):
     # print URLS
     if args.debug:
         op_arg["debug"] = True
-
-    # All endpoints the OpenID Connect Provider should answer on
-    add_endpoints(ENDPOINTS)
-    op_arg["endpoints"] = ENDPOINTS
 
     if args.port == 80:
         _baseurl = config.baseurl

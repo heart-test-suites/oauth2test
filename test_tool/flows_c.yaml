@@ -192,6 +192,8 @@ Flows:
       - Note
       - AsyncAuthn:
           modify_redirect_uri: extension
+          set_request_args:
+            response_type: code
           set_expect_error:
             error:
               - invalid_request

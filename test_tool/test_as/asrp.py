@@ -10,21 +10,25 @@ import argparse
 import logging
 import sys
 
+from oic.utils.keyio import build_keyjar
+from oic.extension.message import factory as message_factory
+
 from aatest.parse_cnf import parse_json_conf
 from aatest.parse_cnf import parse_yaml_conf
 from aatest.utils import setup_logging
 
-from oic.utils.keyio import build_keyjar
-from oic.oic.message import factory as oic_message_factory
+from otest import func
+from otest.aus.io import WebIO
+from otest.aus.prof_util import ProfileHandler
+from otest.aus.tool import WebTester
 
-from oauth2test import operation
-from oauth2test import func
-from oauth2test.prof_util import ProfileHandler
-from oauth2test.utils import get_check
-from oauth2test.io import WebIO
-from oauth2test.tool import WebTester
+from oauth2test.aus import request
+from oauth2test.aus import check
+from oauth2test.aus.client import make_client
 
 from requests.packages import urllib3
+from oauth2test.aus.profiles import PROFILEMAP
+
 urllib3.disable_warnings()
 
 SERVER_LOG_FOLDER = "server_log"
@@ -47,7 +51,6 @@ setup_common_log()
 
 try:
     from mako.lookup import TemplateLookup
-    from oic.oic.message import factory as message_factory
     from oic.oauth2 import ResponseError
     from oic.utils import exception_trace
     from oic.utils.http_util import Redirect, Response
@@ -79,13 +82,15 @@ def application(environ, start_response):
     except KeyError:
         sh = SessionHandler(**webenv)
         sh.session_init()
+        session['session_info'] = sh
 
     inut = WebIO(session=sh, **webenv)
     inut.environ = environ
     inut.start_response = start_response
 
     tester = WebTester(inut, sh, **webenv)
-    tester.check_factory = get_check
+    tester.check_factory = check.factory
+
 
     if path == "robots.txt":
         return inut.static("static/robots.txt")
@@ -237,7 +242,7 @@ if __name__ == '__main__':
     setup_logging("%s/rp_%s.log" % (SERVER_LOG_FOLDER, CONF.PORT), LOGGER)
 
     fdef = {'Flows': {}, 'Order': [], 'Desc': {}}
-    cls_factories = {'': operation.factory}
+    cls_factories = {'': request.factory}
     func_factory = func.factory
     for _file in args.flows:
         if _file.endswith('.yaml'):
@@ -251,12 +256,12 @@ if __name__ == '__main__':
     if args.profiles:
         profiles = importlib.import_module(args.profiles)
     else:
-        from oauth2test import profiles
+        from oauth2test.aus import profiles
 
     if args.operations:
         operation = importlib.import_module(args.operations)
     else:
-        from oauth2test import operation
+        from oauth2test.aus import request
 
     if args.directory:
         _dir = args.directory
@@ -288,10 +293,11 @@ if __name__ == '__main__':
     ENV = {"base_url": CONF.BASE, "kidd": kidd, "keyjar": keyjar,
            "jwks_uri": jwks_uri, "flows": fdef['Flows'], "conf": CONF,
            "cinfo": CONF.INFO, "order": fdef['Order'],
-           "profiles": profiles, "operation": operation,
-           "profile": args.profile, "msg_factory": oic_message_factory,
+           "profiles": profiles, "operation": request,
+           "profile": args.profile, "msg_factory": message_factory,
            "lookup": LOOKUP, "desc": fdef['Desc'], "cache": {},
-           'check_factory': get_check, 'profile_handler': ProfileHandler}
+           'check_factory': check.factory, 'profile_handler': ProfileHandler,
+           'make_entity': make_client, 'map_prof': PROFILEMAP}
 
     SRV = wsgiserver.CherryPyWSGIServer(('0.0.0.0', CONF.PORT),
                                         SessionMiddleware(application,

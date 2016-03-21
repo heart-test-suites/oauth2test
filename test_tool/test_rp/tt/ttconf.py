@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from otest.parse_conf import parse_json_conf
-from otest.setup import main_setup
-from oauth2test.check import rp_check
 
 from oic.extension.message import ServerMetadata
 from oic.extension.provider import ClientInfoEndpoint
@@ -15,17 +12,20 @@ from oic.oauth2.provider import TokenEndpoint
 
 from oic.oic.provider import RegistrationEndpoint
 
-from otest.testtool import authorization
-from otest.testtool import clientinfo
-from otest.testtool import revocation
-from otest.testtool import introspection
-from otest.testtool import op_info
-from otest.testtool import webfinger
-from otest.testtool import css
-from otest.testtool import registration
-from otest.testtool import token
+from otest.rp.endpoints import authorization
+from otest.rp.endpoints import clientinfo
+from otest.rp.endpoints import revocation
+from otest.rp.endpoints import introspection
+from otest.rp.endpoints import op_info
+from otest.rp.endpoints import webfinger
+from otest.rp.endpoints import css
+from otest.rp.endpoints import registration
+from otest.rp.endpoints import token
+from otest.rp.parse_conf import parse_json_conf
+from otest.rp.setup import main_setup
 
-from oauth2test.provider import Provider
+from oauth2test.rp import check
+from oauth2test.rp.provider import Provider
 
 baseurl = "https://localhost"
 issuer = "%s:%%d/" % baseurl
@@ -122,11 +122,11 @@ BEHAVIOR = {
 
 TOOL_ARGS = {
     'setup': main_setup,
-    'check': rp_check,
+    'check': check,
     'provider': Provider,
     'parse_conf': parse_json_conf,
     'cls_factories': [message.factory, exp_message.factory],
-    'chk_factories': [rp_check.factory],
+    'chk_factories': [check.factory],
     'func_factories': [],
     'configuration_response': ServerMetadata,
     'endpoints': [

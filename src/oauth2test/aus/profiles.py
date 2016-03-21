@@ -7,12 +7,14 @@ from aatest.operation import Note
 from aatest.session import Done
 
 from otest.func import check_endpoint
-from otest.operation import AccessToken
-from otest.operation import AsyncAuthn
-from otest.operation import Discovery
-from otest.operation import Registration
-from otest.operation import SyncAuthn
 
+from oauth2test.aus.oper import AsyncAuthn
+from oauth2test.aus.oper import SyncAuthn
+from oauth2test.aus.request import AccessToken
+from oauth2test.aus.request import Discovery
+from oauth2test.aus.request import Registration
+from oauth2test.aus.request import TokenIntrospection
+from oauth2test.aus.request import TokenRevocation
 
 __author__ = 'roland'
 
@@ -48,7 +50,9 @@ PROFILEMAP = {
                 "response_types": ["token"],
                 "grant_types": ["implicit"],
             }}
-    }
+    },
+    TokenIntrospection: {"C": {}, "I": {}, "D": {}},
+    TokenRevocation: {"C": {}, "I": {}, "D": {}},
 }
 
 CRYPT = {"n": "none", "s": "signing", "e": "encryption"}

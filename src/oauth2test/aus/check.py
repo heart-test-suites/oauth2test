@@ -1,11 +1,20 @@
 from datetime import datetime
 import inspect
-import json
-from aatest.check import Check, WARNING
-from aatest.events import EV_HTTP_RESPONSE_HEADER
 import sys
 from jwkest import jws
+
+from aatest.check import Check
+from aatest.check import WARNING
+from aatest.check import ERROR
+from aatest.events import EV_HTTP_RESPONSE_HEADER
+
+from oic.extension.message import ServerMetadata
 from oic.oauth2 import AccessTokenResponse
+from oic.oauth2 import ASConfigurationResponse
+from oic.utils.keyio import KeyBundle
+from oic.utils.keyio import UnknownKeyType
+from oic.utils.keyio import UpdateFailed
+
 from otest.check import get_protocol_response
 
 __author__ = 'roland'
@@ -96,6 +105,44 @@ class VerifyTokens(Check):
                     self._message = "The following claims are missing from " \
                                     "the refresh token: {}".format(missing)
                     self._status = WARNING
+
+        return res
+
+
+class VerifyJWKS(Check):
+    """
+    Verify that the AS publishes it's public keys in the proper way
+    """
+    cid = 'verify-jwks'
+    msg = "Verify that the AS publishes it's public keys in the proper way"
+
+    def _func(self, conv):
+
+        response = get_protocol_response(conv, ASConfigurationResponse)
+        if not response:
+            response = get_protocol_response(conv, ServerMetadata)
+
+        response = response[-1]  # Should only be one but ...
+        res = {}
+
+        try:
+            _jwks_uri = response['jwks_uri']
+        except KeyError:
+            try:
+                kb = KeyBundle(response['jwks'])
+            except KeyBundle:
+                self._message = "Neither jwks_uri or jwks defined"
+                self._status = ERROR
+            except UnknownKeyType as err:
+                self._message = '{}'.format(err)
+                self._status = ERROR
+        else:
+            kb = KeyBundle(source=_jwks_uri, verify_ssl=False)
+            try:
+                kb.update()
+            except UpdateFailed as err:
+                self._message = '{}'.format(err)
+                self._status = ERROR
 
         return res
 

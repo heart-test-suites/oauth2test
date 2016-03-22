@@ -53,8 +53,9 @@ try:
     from mako.lookup import TemplateLookup
     from oic.oauth2 import ResponseError
     from oic.utils import exception_trace
-    from oic.utils.http_util import Redirect, Response
     from oic.utils.http_util import get_post
+    from oic.utils.http_util import Redirect
+    from oic.utils.http_util import Response
     from oic.utils.http_util import BadRequest
     from aatest.session import SessionHandler
 except Exception as ex:
@@ -68,153 +69,16 @@ def pick_args(args, kwargs):
     return dict([(k, kwargs[k]) for k in args])
 
 
-def application(environ, start_response):
-    LOGGER.info("Connection from: %s" % environ["REMOTE_ADDR"])
-    session = environ['beaker.session']
-
-    path = environ.get('PATH_INFO', '').lstrip('/')
-    LOGGER.info("path: %s" % path)
-
-    webenv = session._params['webenv']
-
-    try:
-        sh = session['session_info']
-    except KeyError:
-        sh = SessionHandler(**webenv)
-        sh.session_init()
-        session['session_info'] = sh
-
-    inut = WebIO(session=sh, **webenv)
-    inut.environ = environ
-    inut.start_response = start_response
-
-    tester = WebTester(inut, sh, **webenv)
-    tester.check_factory = check.factory
-
-
-    if path == "robots.txt":
-        return inut.static("static/robots.txt")
-    elif path == "favicon.ico":
-        return inut.static("static/favicon.ico")
-    elif path.startswith("static/"):
-        return inut.static(path)
-    elif path.startswith("export/"):
-        return inut.static(path)
-
-    if path == "":  # list
-        return tester.display_test_list()
-
-    if path == "logs":
-        return inut.display_log("log", issuer="", profile="", testid="")
-    elif path.startswith("log"):
-        if path == "log" or path == "log/":
-            _cc = inut.conf.CLIENT
-            try:
-                _iss = _cc["srv_discovery_url"]
-            except KeyError:
-                _iss = _cc["provider_info"]["issuer"]
-            parts = [quote_plus(_iss)]
-        else:
-            parts = []
-            while path != "log":
-                head, tail = os.path.split(path)
-                # tail = tail.replace(":", "%3A")
-                # if tail.endswith("%2F"):
-                #     tail = tail[:-3]
-                parts.insert(0, tail)
-                path = head
-
-        return inut.display_log("log", *parts)
-    elif path.startswith("tar"):
-        path = path.replace(":", "%3A")
-        return inut.static(path)
-
-    if path == "reset":
-        sh.reset_session()
-        return inut.flow_list()
-    elif path == "pedit":
-        try:
-            return inut.profile_edit()
-        except Exception as err:
-            return inut.err_response("pedit", err)
-    elif path == "profile":
-        return tester.set_profile(environ)
-    elif path.startswith("test_info"):
-        p = path.split("/")
-        try:
-            return inut.test_info(p[1])
-        except KeyError:
-            return inut.not_found()
-    elif path == "continue":
-        return tester.cont(environ, webenv)
-    elif path == "opresult":
-        if tester.conv is None:
-            return inut.sorry_response("", "No result to report")
-
-        return inut.opresult(tester.conv)
-    # expected path format: /<testid>[/<endpoint>]
-    elif path in sh["flow_names"]:
-        resp = tester.run(path, **webenv)
-        session['session_info'] = inut.session
-        if resp:
-            return resp
-        else:
-            return inut.flow_list()
-    elif path in ["authz_cb", "authz_post"]:
-        if path == "authz_cb":
-            _conv = sh["conv"]
-            try:
-                response_mode = _conv.req.req_args["response_mode"]
-            except KeyError:
-                response_mode = ""
-
-            # Check if fragment encoded
-            if response_mode == "form_post":
-                pass
-            else:
-                try:
-                    response_type = _conv.req.req_args["response_type"]
-                except KeyError:
-                    response_type = [""]
-
-                if response_type == [""]:  # expect anything
-                    if environ["QUERY_STRING"]:
-                        pass
-                    else:
-                        return inut.opresult_fragment()
-                elif response_type != ["code"]:
-                    # but what if it's all returned as a query anyway ?
-                    try:
-                        qs = environ["QUERY_STRING"]
-                    except KeyError:
-                        pass
-                    else:
-                        _conv.trace.response("QUERY_STRING:%s" % qs)
-                        _conv.query_component = qs
-
-                    return inut.opresult_fragment()
-
-        try:
-            resp = tester.async_response(webenv["conf"])
-        except Exception as err:
-            return inut.err_response("authz_cb", err)
-        else:
-            if resp:
-                return resp
-            else:
-                try:
-                    return inut.flow_list()
-                except Exception as err:
-                    LOGGER.error(err)
-                    raise
-    else:
-        resp = BadRequest()
-        return resp(environ, start_response)
+def pick_grp(name):
+    return name.split('-')[2]
 
 
 if __name__ == '__main__':
     from beaker.middleware import SessionMiddleware
     from cherrypy import wsgiserver
+
+    # from otest.aus.app import application
+    from otest.aus.app import WebApplication
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', dest='mailaddr')
@@ -285,24 +149,29 @@ if __name__ == '__main__':
     f.close()
     jwks_uri = p.geturl()
 
+    app_args = {
+    }
+
     LOOKUP = TemplateLookup(directories=[_dir + 'templates', _dir + 'htdocs'],
                             module_directory=_dir + 'modules',
                             input_encoding='utf-8',
                             output_encoding='utf-8')
 
-    ENV = {"base_url": CONF.BASE, "kidd": kidd, "keyjar": keyjar,
-           "jwks_uri": jwks_uri, "flows": fdef['Flows'], "conf": CONF,
-           "cinfo": CONF.INFO, "order": fdef['Order'],
-           "profiles": profiles, "operation": request,
-           "profile": args.profile, "msg_factory": message_factory,
-           "lookup": LOOKUP, "desc": fdef['Desc'], "cache": {},
-           'check_factory': check.factory, 'profile_handler': ProfileHandler,
-           'make_entity': make_client, 'map_prof': PROFILEMAP}
+    webenv = {"base_url": CONF.BASE, "kidd": kidd, "keyjar": keyjar,
+              "jwks_uri": jwks_uri, "flows": fdef['Flows'], "conf": CONF,
+              "cinfo": CONF.INFO, "order": fdef['Order'],
+              "profiles": profiles, "operation": request,
+              "profile": args.profile, "msg_factory": message_factory,
+              "lookup": LOOKUP, "desc": fdef['Desc'], "cache": {},
+              'check_factory': check.factory, 'profile_handler': ProfileHandler,
+              'make_entity': make_client, 'map_prof': PROFILEMAP}
 
-    SRV = wsgiserver.CherryPyWSGIServer(('0.0.0.0', CONF.PORT),
-                                        SessionMiddleware(application,
-                                                          session_opts,
-                                                          webenv=ENV))
+    WA = WebApplication(sessionhandler=SessionHandler, webio=WebIO,
+                        webtester=WebTester, check=check, webenv=webenv,
+                        pick_grp=pick_grp)
+
+    SRV = wsgiserver.CherryPyWSGIServer(
+        ('0.0.0.0', CONF.PORT), SessionMiddleware(WA.application, session_opts))
 
     if CONF.BASE.startswith("https"):
         from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter

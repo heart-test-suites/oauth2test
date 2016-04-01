@@ -3,8 +3,9 @@
 import importlib
 import json
 import os
-from urllib.parse import quote_plus
-from urllib.parse import urlparse
+
+#from urllib.parse import urlparse
+from future.backports.urllib.parse import urlparse
 
 import argparse
 import logging

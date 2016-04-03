@@ -45,7 +45,7 @@ setup(
         "requests >= 2.0.0",
         'aatest',
         'pyYAML',
-        'pycryptodome',
+        'pycryptodomex',
         'oic',
         'pyjwkest',
         'future',

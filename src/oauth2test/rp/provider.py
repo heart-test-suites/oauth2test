@@ -3,7 +3,7 @@ import time
 from aatest.events import EV_PROTOCOL_REQUEST
 from future.backports.urllib.parse import parse_qs
 
-from Crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 from jwkest.ecc import P256
 from jwkest.jwk import RSAKey
 from jwkest.jwk import ECKey

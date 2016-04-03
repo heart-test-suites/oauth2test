@@ -66,7 +66,7 @@
     </p><p>
     If the relying party can be told to contact a specific Authorization
     Server it is ursually done using query parameters to the initial
-    service all. This is where you can enter the parameter/-s.<br>
+    service URL. This is where you can enter the parameter/-s.<br>
     If you need to enter the issuers URL you can use &lt;issuer&gt; as
     a short cut.<br>
     Like this: issuer=&lt;issuer&gt; assuming that the parameters name is 'issuer'<br>

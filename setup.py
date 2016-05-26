@@ -52,4 +52,5 @@ setup(
         'entropy'
     ],
     zip_safe=False,
+    scripts=['script/astest.py']
 )

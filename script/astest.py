@@ -77,22 +77,19 @@ def pick_grp(name):
 if __name__ == '__main__':
     from beaker.middleware import SessionMiddleware
     from cherrypy import wsgiserver
-
-    # from otest.aus.app import application
     from otest.aus.app import WebApplication
+    from oauth2test.aus import request
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', dest='mailaddr')
-    parser.add_argument('-o', dest='operations')
-    parser.add_argument('-f', dest='flows', action='append')
-    parser.add_argument('-d', dest='directory')
-    parser.add_argument('-p', dest='profile')
-    parser.add_argument('-P', dest='profiles')
+    parser.add_argument('-f', dest='flows', action='append',
+                        help='The test descriptions')
+    parser.add_argument('-p', dest='profile', help='The RP profile')
+    parser.add_argument('-P', dest='profiles',
+                        help='The OP profile/configuration')
+    parser.add_argument('-s', dest='tls', action='store_true',
+                        help="Whether the server should handle SSL/TLS")
     parser.add_argument(dest="config")
     args = parser.parse_args()
-
-    # global ACR_VALUES
-    # ACR_VALUES = CONF.ACR_VALUES
 
     session_opts = {
         'session.type': 'memory',
@@ -123,22 +120,16 @@ if __name__ == '__main__':
     else:
         from oauth2test.aus import profiles
 
-    if args.operations:
-        operation = importlib.import_module(args.operations)
-    else:
-        from oauth2test.aus import request
-
-    if args.directory:
-        _dir = args.directory
-        if not _dir.endswith("/"):
-            _dir += "/"
-    else:
-        _dir = "./"
+    _dir = "./"
+    LOOKUP = TemplateLookup(directories=[_dir + 'templates', _dir + 'htdocs'],
+                            module_directory=_dir + 'modules',
+                            input_encoding='utf-8',
+                            output_encoding='utf-8')
 
     if args.profile:
         TEST_PROFILE = args.profile
     else:
-        TEST_PROFILE = "C.T.T.ns"
+        TEST_PROFILE = "C"
 
     # Add own keys for signing/encrypting JWTs
     jwks, keyjar, kidd = build_keyjar(CONF.keys)
@@ -152,11 +143,6 @@ if __name__ == '__main__':
 
     app_args = {
     }
-
-    LOOKUP = TemplateLookup(directories=[_dir + 'templates', _dir + 'htdocs'],
-                            module_directory=_dir + 'modules',
-                            input_encoding='utf-8',
-                            output_encoding='utf-8')
 
     webenv = {"base_url": CONF.BASE, "kidd": kidd, "keyjar": keyjar,
               "jwks_uri": jwks_uri, "flows": fdef['Flows'], "conf": CONF,
@@ -174,7 +160,7 @@ if __name__ == '__main__':
     SRV = wsgiserver.CherryPyWSGIServer(
         ('0.0.0.0', CONF.PORT), SessionMiddleware(WA.application, session_opts))
 
-    if CONF.BASE.startswith("https"):
+    if args.tls:
         from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
 
         SRV.ssl_adapter = BuiltinSSLAdapter(CONF.SERVER_CERT, CONF.SERVER_KEY,

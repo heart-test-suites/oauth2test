@@ -1,15 +1,11 @@
 {
   "Heart": {
-    "token_endpoint_auth_methods_supported": [
-      "private_key_jwt"
-    ],
+    "token_endpoint_auth_methods_supported": ["private_key_jwt"],
     "response_modes_supported": [
       "fragment",
       "query"
     ],
-    "claim_types_supported": [
-      "normal"
-    ],
+    "claim_types_supported": ["normal"],
     "claims_parameter_supported": true,
     "scopes_supported": [
       "offline_access",
@@ -24,8 +20,8 @@
       "code",
       "token"
     ],
-    "token_endpoint_auth_signing_alg_values_supported": [
-      "RS256"
-    ]
+    "token_endpoint_auth_signing_alg_values_supported": ["RS256"],
+    "id_token_signing_alg_values_supported": ["RS256"],
+    "request_object_signing_alg_values_supported": ["RS256"]
   }
 }

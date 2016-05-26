@@ -4,13 +4,15 @@ from oic.extension.message import ServerMetadata
 from oic.extension.provider import ClientInfoEndpoint
 from oic.extension.provider import RevocationEndpoint
 from oic.extension.provider import IntrospectionEndpoint
-from oic.extension import message as exp_message
 
-from oic.oauth2 import message
 from oic.oauth2.provider import AuthorizationEndpoint
 from oic.oauth2.provider import TokenEndpoint
 
 from oic.oic.provider import RegistrationEndpoint
+
+from otest.rp import check
+from otest.rp import func
+from otest.rp import operation
 
 from otest.rp.endpoints import authorization
 from otest.rp.endpoints import clientinfo
@@ -24,8 +26,8 @@ from otest.rp.endpoints import token
 from otest.rp.parse_conf import parse_json_conf
 from otest.rp.setup import main_setup
 
-from oauth2test.rp import check
 from oauth2test.rp.provider import Provider
+#from oauth2test.rp.server import Server
 
 baseurl = "https://localhost"
 issuer = "%s:%%d/" % baseurl
@@ -125,9 +127,9 @@ TOOL_ARGS = {
     'check': check,
     'provider': Provider,
     'parse_conf': parse_json_conf,
-    'cls_factories': [message.factory, exp_message.factory],
-    'chk_factories': [check.factory],
-    'func_factories': [],
+    'cls_factories': {'': operation.factory},
+    'chk_factory': check.factory,
+    'func_factory': func.factory,
     'configuration_response': ServerMetadata,
     'endpoints': [
         AuthorizationEndpoint(authorization),
@@ -141,6 +143,7 @@ TOOL_ARGS = {
         (r'^.well-known/openid-configuration', op_info),
         (r'^.well-known/webfinger', webfinger),
         (r'.+\.css$', css),
-    ]
+    ],
+    #'server_cls': Server
 }
 

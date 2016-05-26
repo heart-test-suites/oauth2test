@@ -6,6 +6,7 @@ Flows:
       - Discovery:
           set_discovery_issuer: null
     assert:
+      check-http-response: null
       verify-response:
         response_cls:
           - ProviderConfigurationResponse

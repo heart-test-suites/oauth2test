@@ -2,9 +2,8 @@ import json
 import logging
 import importlib
 import sys
-from aatest.events import Events
-from oic.extension.token import JWTToken
 
+from oic.extension.token import JWTToken
 from oic.utils.authn.authn_context import AuthnBroker
 from oic.utils.authn.client import verify_client
 from oic.utils.authz import AuthzHandling
@@ -12,8 +11,8 @@ from oic.utils.keyio import keyjar_init
 from oic.utils.sdb import SessionDB
 from oic.utils.userinfo import UserInfo
 
+from aatest.events import Events
 from oauth2test.rp.provider import Provider
-from otest.rp.endpoints import add_endpoints
 
 import csv
 

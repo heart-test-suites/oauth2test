@@ -1,6 +1,6 @@
 import json
 import time
-from aatest.events import EV_PROTOCOL_REQUEST
+from aatest.events import EV_PROTOCOL_REQUEST, EV_FAULT
 from future.backports.urllib.parse import parse_qs
 
 from Cryptodome.PublicKey import RSA
@@ -8,6 +8,7 @@ from jwkest.ecc import P256
 from jwkest.jwk import RSAKey
 from jwkest.jwk import ECKey
 from jwkest.jwk import SYMKey
+from oauth2test.rp.server import Server
 from oic.extension import provider
 from oic.extension.client import RegistrationRequest
 from oic.oauth2.message import AccessTokenRequest
@@ -42,7 +43,7 @@ class Provider(provider.Provider):
             client_authn=client_authn, symkey=symkey, urlmap=urlmap,
             ca_bundle=ca_certs, keyjar=keyjar, hostname=hostname,
             verify_ssl=verify_ssl, capabilities=capabilities, config=config,
-            **kwargs)
+            server_cls=Server, **kwargs)
 
         self.claims_type = ["normal"]
         self.behavior_type = []
@@ -56,6 +57,20 @@ class Provider(provider.Provider):
         self.template_lookup = template_lookup
         self.template = template
         self.strict = False
+        self.jwx_def = {}
+        self.build_jwx_def()
+
+    def build_jwx_def(self):
+        self.jwx_def = {}
+
+        for _typ in ["signing_alg", "encryption_alg", "encryption_enc"]:
+            self.jwx_def[_typ] = {}
+            for item in ["id_token", "userinfo"]:
+                cap_param = '{}_{}_values_supported'.format(item, _typ)
+                try:
+                    self.jwx_def[_typ][item] = self.capabilities[cap_param][0]
+                except KeyError:
+                    self.jwx_def[_typ][item] = ""
 
     def create_providerinfo(self, pcr_class=ASConfigurationResponse,
                             setup=None):
@@ -83,7 +98,6 @@ class Provider(provider.Provider):
                         error="invalid_configuration_parameter",
                         descr="Non-HTTPS endpoint in '{}'".format(endp))
 
-
     def registration_endpoint(self, request, authn=None, **kwargs):
         try:
             reg_req = RegistrationRequest().deserialize(request, "json")
@@ -106,9 +120,9 @@ class Provider(provider.Provider):
                 # find the client id
                 req_resp = ASConfigurationResponse().from_json(
                     _response.message)
-                for kb in self.keyjar[req_resp["client_id"]]:
-                    if kb.imp_jwks:
-                        self.trace.info("Client JWKS: {}".format(kb.imp_jwks))
+                # for kb in self.keyjar[req_resp["client_id"]]:
+                #     if kb.imp_jwks:
+                #         self.trace.info("Client JWKS: {}".format(kb.imp_jwks))
 
         return _response
 
@@ -125,8 +139,7 @@ class Provider(provider.Provider):
             pass
         else:
             if _resp.status_code == 200:
-                self.trace.info(
-                    "Request from request_uri: {}".format(_resp.text))
+                self.events.store("Request_uri content",_resp.text)
 
         return _response
 
@@ -136,7 +149,7 @@ class Provider(provider.Provider):
             req = AccessTokenRequest().deserialize(request, 'urlencoded')
             client_id = self.client_authn(self, req, authn)
         except Exception as err:
-            self.trace.error("Failed to verify client due to: %s" % err)
+            self.events.stored(EV_FAULT, err)
             return self._error(error="incorrect_behavior",
                                descr="Failed to verify client")
 
@@ -204,10 +217,9 @@ class Provider(provider.Provider):
                             self.init_keys.append(key)
             else:
                 for kb in self.keyjar[client_id]:
-                    self.trace.info("Updating client keys")
                     kb.update()
                     if kb.imp_jwks:
-                        self.trace.info("Client JWKS: {}".format(kb.imp_jwks))
+                        self.events.store("Client JWKS", kb.imp_jwks)
                 same = 0
                 # Verify that the new keys are not the same
                 for kb in self.keyjar[client_id]:
@@ -218,9 +230,8 @@ class Provider(provider.Provider):
                             if key in self.init_keys:
                                 same += 1
                             else:
-                                self.trace.info("New key: {}".format(key))
+                                self.events.store("New key", key)
                 if same == len(self.init_keys):  # no change
-                    self.trace.info("No change in keys")
                     raise TestError("Keys unchanged")
                 else:
                     self.trace.info(

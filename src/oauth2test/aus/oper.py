@@ -4,9 +4,9 @@ import os
 
 from future.backports.urllib.parse import urlparse
 
-from aatest import Unknown, Break
+from aatest import Break
+from aatest import Unknown
 from aatest.events import EV_PROTOCOL_RESPONSE
-from aatest.operation import Operation
 
 from oic import rndstr
 
@@ -18,6 +18,7 @@ from oic.extension.message import ServerMetadata
 from oic.extension.message import ClientInfoResponse
 from oic.oauth2.message import AccessTokenResponse
 
+from otest.aus.operation import Operation
 from otest.aus.prof_util import DISCOVER
 from otest.aus.prof_util import REGISTER
 from otest.aus.prof_util import WEBFINGER
@@ -185,7 +186,7 @@ class AsyncAuthn(AsyncGetRequest):
 
 class AccessToken(SyncPostRequest):
     def __init__(self, conv, inut, sh, **kwargs):
-        Operation.__init__(self, conv, inut, sh, **kwargs)
+        SyncPostRequest.__init__(self, conv, inut, sh, **kwargs)
         self.op_args["state"] = conv.state
         self.req_args["redirect_uri"] = conv.entity.redirect_uris[0]
 

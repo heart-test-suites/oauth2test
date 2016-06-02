@@ -1,0 +1,37 @@
+Flows:
+  SP-AuthnRedirect-00:
+    name: 'Basic Login test expect HTTP 200 result'
+    desc: 'WebSSO verify authentication request, verify HTTP-Response after sending the SAML response'
+    sequence:
+      - Login:
+          set_start_page: ''
+          add_post_condition:
+              http_response:
+                  status_code:
+                    - 302
+                    - 303
+              verify_authnrequest: {}
+      - AuthenticationResponseRedirect:
+          add_pre_condition:
+              has_endpoint:
+                  typ: 'spsso_descriptor'
+                  binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+                  service: 'assertion_consumer_service'
+          set_userid: ''
+          set_identity: {}
+          set_authn: {}
+          set_op_args:
+              sign_response: true
+          add_post_condition:
+              http_response:
+                  status_code:
+                    - 302
+                    - 303
+      - FollowRedirect
+    assert:
+        http_response:
+            status_code:
+              - 200
+    profiles:
+      - saml2int
+    idp: basic

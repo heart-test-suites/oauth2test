@@ -30,7 +30,7 @@ from oauth2test.rp.provider import Provider
 #from oauth2test.rp.server import Server
 
 baseurl = "https://localhost"
-issuer = "%s:%%d/" % baseurl
+issuer = baseurl
 
 keys = [
     {"type": "RSA", "key": "keys/pyoidc_enc", "use": ["enc"]},
@@ -112,8 +112,6 @@ USERDB = {
         "email_verified": True,
     }
 }
-
-TARGET = 'https://localhost:8666/rp?issuer={}'
 
 BEHAVIOR = {
     'client_registration': {

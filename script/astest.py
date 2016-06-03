@@ -22,8 +22,8 @@ from otest import func
 from otest.aus.io import WebIO
 from otest.aus.prof_util import ProfileHandler
 from otest.aus.tool import WebTester
+from otest.rp.setup import read_path2port_map
 
-from oauth2test.aus import request
 from oauth2test.aus import check
 from oauth2test.aus.client import make_client
 
@@ -83,11 +83,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', dest='flows', action='append',
                         help='The test descriptions')
+    parser.add_argument(
+        '-m', dest='path2port',
+        help='Mapping between path and port used when reverse proxy is in use')
     parser.add_argument('-p', dest='profile', help='The RP profile')
     parser.add_argument('-P', dest='profiles',
                         help='The OP profile/configuration')
     parser.add_argument('-s', dest='tls', action='store_true',
                         help="Whether the server should handle SSL/TLS")
+    parser.add_argument(
+        '-x', dest='xport', action='store_true', help='ONLY for testing')
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
@@ -141,10 +146,26 @@ if __name__ == '__main__':
     f.close()
     jwks_uri = p.geturl()
 
-    app_args = {
-    }
+    if args.path2port:
+        ppmap = read_path2port_map(args.path2port)
+        _path = ppmap[str(CONF.PORT)]
+        if args.xport:
+            _port = CONF.PORT
+            _base = '{}:{}/{}/'.format(CONF.BASE, str(CONF.PORT), _path)
+        else:
+            _base = '{}/{}/'.format(CONF.BASE, _path)
+            if args.tls:
+                _port = 443
+            else:
+                _port = 80
+    else:
+        _port = CONF.PORT
+        _base = CONF.BASE
+        _path = ''
 
-    webenv = {"base_url": CONF.BASE, "kidd": kidd, "keyjar": keyjar,
+    app_args = {}
+
+    webenv = {"base_url": _base, "kidd": kidd, "keyjar": keyjar,
               "jwks_uri": jwks_uri, "flows": fdef['Flows'], "conf": CONF,
               "cinfo": CONF.INFO, "order": fdef['Order'],
               "profiles": profiles, "operation": request,
@@ -155,10 +176,10 @@ if __name__ == '__main__':
 
     WA = WebApplication(sessionhandler=SessionHandler, webio=WebIO,
                         webtester=WebTester, check=check, webenv=webenv,
-                        pick_grp=pick_grp)
+                        pick_grp=pick_grp, path=_path)
 
     SRV = wsgiserver.CherryPyWSGIServer(
-        ('0.0.0.0', CONF.PORT), SessionMiddleware(WA.application, session_opts))
+        ('0.0.0.0', _port), SessionMiddleware(WA.application, session_opts))
 
     if args.tls:
         from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
@@ -169,7 +190,8 @@ if __name__ == '__main__':
     else:
         extra = ""
 
-    txt = "RP server starting listening on port:%s%s" % (CONF.PORT, extra)
+    print(_base)
+    txt = "RP server starting listening on port:%s%s" % (_port, extra)
     LOGGER.info(txt)
     print(txt)
     try:

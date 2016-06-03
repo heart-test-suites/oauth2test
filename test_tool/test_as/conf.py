@@ -1,7 +1,7 @@
 __author__ = 'roland'
 
-PORT = 8088
-BASE = "https://localhost:" + str(PORT) + "/"
+PORT = 8100
+BASE = "https://localhost"
 
 # If BASE is https these has to be specified
 SERVER_CERT = "./certs/server.crt"
@@ -30,9 +30,11 @@ keys = [
     {"type": "EC", "crv": "P-256", "use": ["enc"]}
 ]
 
+REDIRECT_URIS_PATTERN = ["{}authz_cb"]
+
 INFO = {
     "client": {
-        "redirect_uris": ["%sauthz_cb" % BASE],
+        #"redirect_uris": ["%sauthz_cb" % BASE],
         "application_type": "web",
         "contact": ["foo@example.com"]
     },

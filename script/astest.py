@@ -5,7 +5,6 @@ import json
 import os
 
 #from urllib.parse import urlparse
-from future.backports.urllib.parse import urlparse
 
 import argparse
 import logging
@@ -139,13 +138,6 @@ if __name__ == '__main__':
     # Add own keys for signing/encrypting JWTs
     jwks, keyjar, kidd = build_keyjar(CONF.keys)
 
-    # export JWKS
-    p = urlparse(CONF.KEY_EXPORT_URL)
-    f = open("." + p.path, "w")
-    f.write(json.dumps(jwks))
-    f.close()
-    jwks_uri = p.geturl()
-
     if args.path2port:
         ppmap = read_path2port_map(args.path2port)
         _path = ppmap[str(CONF.PORT)]
@@ -163,7 +155,21 @@ if __name__ == '__main__':
         _base = CONF.BASE
         _path = ''
 
+    # export JWKS
+    _sdir = 'static'
+    if _port not in [443,80]:
+        jwks_uri = "{}:{}/static/jwks_{}.json".format(CONF.BASE, _port, _port)
+        f = open('{}/jwks_{}.json'.format(_sdir, _port), "w")
+    else:
+        jwks_uri = "{}/static/jwks.json".format(CONF.BASE)
+        f = open('{}/jwks.json'.format(_sdir), "w")
+    f.write(json.dumps(jwks))
+    f.close()
+
     app_args = {}
+
+    l = [s.format(_base) for s in CONF.REDIRECT_URIS_PATTERN]
+    CONF.INFO['client']['redirect_uris'] = l
 
     webenv = {"base_url": _base, "kidd": kidd, "keyjar": keyjar,
               "jwks_uri": jwks_uri, "flows": fdef['Flows'], "conf": CONF,

@@ -185,7 +185,7 @@ if __name__ == '__main__':
                         pick_grp=pick_grp, path=_path)
 
     SRV = wsgiserver.CherryPyWSGIServer(
-        ('0.0.0.0', _port), SessionMiddleware(WA.application, session_opts))
+        ('0.0.0.0', CONF.PORT), SessionMiddleware(WA.application, session_opts))
 
     if args.tls:
         from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
@@ -197,7 +197,7 @@ if __name__ == '__main__':
         extra = ""
 
     print(_base)
-    txt = "RP server starting listening on port:%s%s" % (_port, extra)
+    txt = "RP server starting listening on port:%s%s" % (CONF.PORT, extra)
     LOGGER.info(txt)
     print(txt)
     try:

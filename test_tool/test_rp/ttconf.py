@@ -29,8 +29,9 @@ from otest.rp.setup import main_setup
 from oauth2test.rp.provider import Provider
 #from oauth2test.rp.server import Server
 
-baseurl = "https://localhost"
-issuer = baseurl
+BASE = "http://localhost"
+baseurl = BASE
+ISSUER = BASE
 
 keys = [
     {"type": "RSA", "key": "keys/pyoidc_enc", "use": ["enc"]},
@@ -50,7 +51,7 @@ multi_keys = [
     {"type": "EC", "crv": "P-256", "use": ["enc"]}
 ]
 
-SERVICE_URL = "%s/verify" % issuer
+SERVICE_URL = "%s/verify" % ISSUER
 
 AUTHENTICATION = {
     # Dummy authentication
@@ -61,10 +62,10 @@ COOKIENAME = 'pyoic'
 COOKIETTL = 4 * 60  # 4 hours
 SYM_KEY = "SoLittleTime,Got"
 
-SERVER_CERT = "certs/server.crt"
-SERVER_KEY = "certs/server.key"
-CERT_CHAIN = None
-CA_BUNDLE = None
+#SERVER_CERT = "certs/server.crt"
+#SERVER_KEY = "certs/server.key"
+#CERT_CHAIN = None
+#CA_BUNDLE = None
 
 # =======  SIMPLE DATABASE ==============
 
@@ -142,6 +143,7 @@ TOOL_ARGS = {
         (r'^.well-known/webfinger', webfinger),
         (r'.+\.css$', css),
     ],
+    'profile_handler': None
     #'server_cls': Server
 }
 

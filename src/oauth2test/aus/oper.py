@@ -18,10 +18,10 @@ from oic.extension.message import ServerMetadata
 from oic.extension.message import ClientInfoResponse
 from oic.oauth2.message import AccessTokenResponse
 
+from otest.prof_util import DISCOVER
+from otest.prof_util import REGISTER
+from otest.prof_util import WEBFINGER
 from otest.aus.operation import Operation
-from otest.aus.prof_util import DISCOVER
-from otest.aus.prof_util import REGISTER
-from otest.aus.prof_util import WEBFINGER
 from otest.aus.request import same_issuer
 from otest.aus.request import SyncGetRequest
 from otest.aus.request import AsyncGetRequest

@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from aatest.events import EV_PROTOCOL_REQUEST, EV_FAULT
 from future.backports.urllib.parse import parse_qs
@@ -16,6 +17,8 @@ from oic.oauth2.message import ASConfigurationResponse
 from oic.utils.keyio import keyjar_init
 
 __author__ = 'roland'
+
+logger = logging.getLogger(__name__)
 
 
 class TestError(Exception):
@@ -104,6 +107,7 @@ class Provider(provider.Provider):
         except ValueError:
             reg_req = RegistrationRequest().deserialize(request)
 
+        logger.debug("@registration_endpoint: {}".format(reg_req))
         self.events.store(EV_PROTOCOL_REQUEST, reg_req)
 
         if self.strict:
@@ -114,6 +118,7 @@ class Provider(provider.Provider):
         _response = provider.Provider.registration_endpoint(
             self, request=request, authn=authn, **kwargs)
 
+        logger.debug('registration response: {}'.format(_response.message))
         self.init_keys = []
         if "jwks_uri" in reg_req:
             if _response.status == "200 OK":

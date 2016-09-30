@@ -9,6 +9,7 @@ from oic.oauth2.provider import AuthorizationEndpoint
 from oic.oauth2.provider import TokenEndpoint
 
 from oic.oic.provider import RegistrationEndpoint
+from otest.prof_util import SimpleProfileHandler
 
 from otest.rp import check
 from otest.rp import func
@@ -143,7 +144,7 @@ TOOL_ARGS = {
         (r'^.well-known/webfinger', webfinger),
         (r'.+\.css$', css),
     ],
-    'profile_handler': None
+    'profile_handler': SimpleProfileHandler
     #'server_cls': Server
 }
 

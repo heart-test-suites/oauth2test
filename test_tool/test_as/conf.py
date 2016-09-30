@@ -1,7 +1,7 @@
 __author__ = 'roland'
 
 PORT = 8100
-BASE = "https://localhost"
+BASE = "http://localhost"
 
 # If BASE is https these has to be specified
 SERVER_CERT = "./certs/server.crt"

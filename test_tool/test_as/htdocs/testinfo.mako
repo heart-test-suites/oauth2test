@@ -28,6 +28,39 @@ def profile_output(pinfo):
     return "\n".join(element)
 %>
 
+<%
+    LINK_INFO = [
+    {
+        'href':"{}/static/bootstrap/css/bootstrap.min.css",
+        'rel':"stylesheet",
+        'media':"screen"},
+    {
+        'href':"{}/static/style.css",
+        'rel':"stylesheet",
+        'media':"all"}
+    ]
+
+    def boot_strap(base):
+        line = []
+        for d in LINK_INFO:
+            _href = d['href'].format(base)
+            line.append('<link href={href} rel={rel} media={media}>'.format(
+                 href=_href,rel=d['rel'],media=d['media']))
+        return "\n".join(line)
+%>
+
+<%
+    SCRIPT_INFO = ["{}/static/jquery.min.1.9.1.js", "{}/static/bootstrap/js/bootstrap.min.js"]
+
+    def postfix(base):
+        line = []
+        for d in SCRIPT_INFO:
+            _src = d.format(base)
+            line.append('<script src={}></script>'.format(_src))
+        return "\n".join(line)
+
+    %>
+
 <!DOCTYPE html>
 
 <html>
@@ -35,9 +68,7 @@ def profile_output(pinfo):
     <title>HEART OAuth2 AS Test</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap -->
-    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-      <link href="static/style.css" rel="stylesheet" media="all">
-
+    ${boot_strap(base)}
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="../../assets/js/html5shiv.js"></script>
@@ -57,9 +88,6 @@ def profile_output(pinfo):
         <hr>
         <h3>Result</h3>${result}
     </div> <!-- /container -->
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="/static/jquery.min.1.9.1.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    ${postfix(base)}
   </body>
 </html>

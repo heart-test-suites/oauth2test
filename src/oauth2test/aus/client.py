@@ -1,5 +1,5 @@
-from aatest.events import EV_PROTOCOL_RESPONSE
-from aatest.events import EV_RESPONSE
+from otest.events import EV_PROTOCOL_RESPONSE
+from otest.events import EV_RESPONSE
 
 from oic.extension import client
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD

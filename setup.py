@@ -43,7 +43,6 @@ setup(
     install_requires=[
         "argparse",
         "requests >= 2.0.0",
-        'aatest',
         'pyYAML',
         'pycryptodomex',
         'oic',

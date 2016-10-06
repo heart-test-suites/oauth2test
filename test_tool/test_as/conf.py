@@ -38,7 +38,7 @@ INFO = {
         "application_type": "web",
         "contact": ["foo@example.com"]
     },
-    'srv_discovery_url': 'https://localhost:8092'
+    'srv_discovery_url': ISSUER
     # registered
     # provider_info
 }

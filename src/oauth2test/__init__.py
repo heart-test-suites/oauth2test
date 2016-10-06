@@ -9,7 +9,6 @@
 """
 import json
 import time
-import aatest
 
 __author__ = 'roland'
 __version__ = '0.1.1'

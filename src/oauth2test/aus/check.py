@@ -3,11 +3,6 @@ import inspect
 import sys
 from jwkest import jws
 
-from aatest.check import Check
-from aatest.check import WARNING
-from aatest.check import ERROR
-from aatest.events import EV_HTTP_RESPONSE_HEADER
-
 from oic.extension.message import ServerMetadata
 from oic.oauth2 import AccessTokenResponse
 from oic.oauth2 import ASConfigurationResponse
@@ -16,6 +11,11 @@ from oic.utils.keyio import UnknownKeyType
 from oic.utils.keyio import UpdateFailed
 
 from otest.check import get_protocol_response
+from otest.check import Check
+from otest.check import WARNING
+from otest.check import ERROR
+from otest.events import EV_HTTP_RESPONSE_HEADER
+
 
 __author__ = 'roland'
 

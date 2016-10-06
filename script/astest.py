@@ -13,9 +13,9 @@ import sys
 from oic.utils.keyio import build_keyjar
 from oic.extension.message import factory as message_factory
 
-from aatest.parse_cnf import parse_json_conf
-from aatest.parse_cnf import parse_yaml_conf
-from aatest.utils import setup_logging
+from otest.parse_cnf import parse_json_conf
+from otest.parse_cnf import parse_yaml_conf
+from otest.utils import setup_logging
 
 from otest import func
 from otest.aus.io import WebIO
@@ -25,9 +25,9 @@ from otest.rp.setup import read_path2port_map
 
 from oauth2test.aus import check
 from oauth2test.aus.client import make_client
+from oauth2test.aus.profiles import PROFILEMAP
 
 from requests.packages import urllib3
-from oauth2test.aus.profiles import PROFILEMAP
 
 urllib3.disable_warnings()
 
@@ -57,7 +57,7 @@ try:
     from oic.utils.http_util import Redirect
     from oic.utils.http_util import Response
     from oic.utils.http_util import BadRequest
-    from aatest.session import SessionHandler
+    from otest.session import SessionHandler
 except Exception as ex:
     COMMON_LOGGER.exception(ex)
     raise ex

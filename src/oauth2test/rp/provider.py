@@ -1,7 +1,6 @@
 import json
 import logging
 import time
-from aatest.events import EV_PROTOCOL_REQUEST, EV_FAULT
 from future.backports.urllib.parse import parse_qs
 
 from Cryptodome.PublicKey import RSA
@@ -9,12 +8,17 @@ from jwkest.ecc import P256
 from jwkest.jwk import RSAKey
 from jwkest.jwk import ECKey
 from jwkest.jwk import SYMKey
-from oauth2test.rp.server import Server
+
 from oic.extension import provider
 from oic.extension.client import RegistrationRequest
 from oic.oauth2.message import AccessTokenRequest
 from oic.oauth2.message import ASConfigurationResponse
 from oic.utils.keyio import keyjar_init
+
+from otest.events import EV_FAULT
+from otest.events import EV_PROTOCOL_REQUEST
+
+from oauth2test.rp.server import Server
 
 __author__ = 'roland'
 

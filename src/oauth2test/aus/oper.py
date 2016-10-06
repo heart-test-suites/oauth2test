@@ -4,10 +4,6 @@ import os
 
 from future.backports.urllib.parse import urlparse
 
-from aatest import Break
-from aatest import Unknown
-from aatest.events import EV_PROTOCOL_RESPONSE
-
 from oic import rndstr
 
 from oic.exception import IssuerMismatch
@@ -18,6 +14,9 @@ from oic.extension.message import ServerMetadata
 from oic.extension.message import ClientInfoResponse
 from oic.oauth2.message import AccessTokenResponse
 
+from otest import Break
+from otest import Unknown
+from otest.events import EV_PROTOCOL_RESPONSE
 from otest.prof_util import DISCOVER
 from otest.prof_util import REGISTER
 from otest.prof_util import WEBFINGER

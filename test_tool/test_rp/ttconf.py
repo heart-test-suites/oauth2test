@@ -9,10 +9,10 @@ from oic.oauth2.provider import AuthorizationEndpoint
 from oic.oauth2.provider import TokenEndpoint
 
 from oic.oic.provider import RegistrationEndpoint
+from otest import func
 from otest.prof_util import SimpleProfileHandler
 
 from otest.rp import check
-from otest.rp import func
 from otest.rp import operation
 
 from otest.rp.endpoints import authorization
@@ -27,6 +27,7 @@ from otest.rp.endpoints import token
 from otest.rp.parse_conf import parse_json_conf
 from otest.rp.setup import main_setup
 
+from oauth2test.rp import func
 from oauth2test.rp.provider import Provider
 #from oauth2test.rp.server import Server
 

@@ -1,12 +1,11 @@
 from oic.utils.time_util import in_a_while
 
-from aatest import prof_util
+from otest import prof_util
 
-from aatest.func import set_request_args
-from aatest.operation import Note
-from aatest.session import Done
-
+from otest.func import set_request_args
 from otest.func import check_endpoint
+from otest.operation import Note
+from otest.session import Done
 
 from oauth2test.aus.oper import AsyncAuthn
 from oauth2test.aus.oper import SyncAuthn

@@ -2,19 +2,19 @@ import inspect
 import logging
 import sys
 
-from aatest import Unknown
-from aatest import Break
-from aatest.events import EV_HTTP_RESPONSE
-
 from oic.oauth2 import ErrorResponse
 from oic.oauth2.message import AccessTokenResponse
 from oic.extension.client import ClientInfoResponse
 from oic.extension.message import TokenIntrospectionResponse
 from oic.oic import ProviderConfigurationResponse
 
+from otest import Unknown
+from otest import Break
+from otest.events import EV_HTTP_RESPONSE
 from otest.aus.operation import Operation
 from otest.aus.request import Request
 from otest.aus.request import SyncPostRequest
+
 from oauth2test.aus import oper
 
 __author__ = 'roland'

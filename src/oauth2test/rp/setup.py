@@ -11,7 +11,8 @@ from oic.utils.keyio import keyjar_init
 from oic.utils.sdb import SessionDB
 from oic.utils.userinfo import UserInfo
 
-from aatest.events import Events
+from otest.events import Events
+
 from oauth2test.rp.provider import Provider
 
 import csv

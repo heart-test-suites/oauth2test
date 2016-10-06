@@ -4,63 +4,61 @@ def op_choice(base, nodes, test_info, headlines):
     """
     Creates a list of test flows
     """
-    #colordict = {
-    #    "OK":'<img src="/static/green.png" alt="Green">',
-    #    "WARNING":'<img src="/static/yellow.png" alt="Yellow">',
-    #    "ERROR":'<img src="/static/red.png" alt="Red">',
-    #    "CRITICAL":'<img src="/static/red.png" alt="Red">'
-    #}
     _grp = "_"
-    color = ['<img src="/static/black.png" alt="Black">',
-             '<img src="/static/green.png" alt="Green">',
-             '<img src="/static/yellow.png" alt="Yellow">',
-             '<img src="/static/red.png" alt="Red">',
-             '<img src="/static/qmark.jpg" alt="QuestionMark">',
-             '<img src="/static/greybutton" alt="Grey">',
-             ]
-    element = "<ul>"
+    IMG = [
+        {'src':"{}/static/black.png",'alt':"Black"},
+        {'src':"{}/static/green.png", 'alt':"Green"},
+        {'src':'{}/static/yellow.png', 'alt':"Yellow"},
+        {'src':"{}/static/red.png", 'alt':"Red"},
+        {'src':"{}/static/qmark.jpg", 'alt':"QuestionMark"},
+        {'src':"/static/greybutton", 'alt':'Grey'}
+    ]
+    element = ["<ul>"]
+    color_pat = '<img src="{src}" alt="{alt}">'
 
     for node in nodes:
         # 4 or more parts
         p1, p2, grp, spec = node.name.split("-", 3)
         if not grp == _grp:
             _grp = grp
-            element += "<hr size=2><h3 id='%s'>%s</h3>" % (_grp, headlines[_grp])
-        element += "<li><a href='%s%s'>%s</a>%s (%s) " % (base,
-            node.name, color[node.state], node.desc, node.name)
+            element.append("<hr size=2><h3 id='%s'>%s</h3>" % (_grp,
+              headlines[_grp]))
+
+        _src = IMG[node.state]['src'].format(base)
+        _col = color_pat.format(src=_src,alt=IMG[node.state]['alt'])
+        element.append("<li><a href='%s/%s'>%s</a>%s (%s) " % (base,
+            node.name, _col, node.desc, node.name))
 
         if node.rmc:
-            element += '<img src="/static/delete-icon.png">'
+            element.append('<img src="{}/static/delete-icon.png">'.format(base))
         if node.experr:
-            element += '<img src="/static/beware.png">'
+            element.append('<img src="{}/static/beware.png">'.format(base))
         if node.name in test_info:
-            element += "<a href='%stest_info/%s'><img src='static/info32.png'></a>" % (
-                    base, node.name)
-        #if node.mti == "MUST":
-        #    element += '<img src="/static/must.jpeg">'
+            element.append("<a href='%stest_info/%s'><img src='static/info32.png'></a>" % (
+                    base, node.name))
 
-    element += "</select>"
-    return element
+    element.append("</select>")
+    return "\n".join(element)
 %>
 
 <%!
 
 ICONS = [
-    ('<img src="/static/black.png" alt="Black">',"The test has not been run"),
-    ('<img src="/static/green.png" alt="Green">',"Success"),
-    ('<img src="/static/yellow.png" alt="Yellow">',
+    ('<img src="{}/static/black.png" alt="Black">',"The test has not been run"),
+    ('<img src="{}/static/green.png" alt="Green">',"Success"),
+    ('<img src="{}/static/yellow.png" alt="Yellow">',
     "Warning, something was not as expected"),
-    ('<img src="/static/red.png" alt="Red">',"Failed"),
-    ('<img src="/static/qmark.jpg" alt="QuestionMark">',
+    ('<img src="{}/static/red.png" alt="Red">',"Failed"),
+    ('<img src="{}/static/qmark.jpg" alt="QuestionMark">',
     "The test flow wasn't completed. This may have been expected or not"),
-    ('<img src="/static/info32.png">',
+    ('<img src="{}/static/info32.png">',
     "Signals the fact that there are trace information available for the test"),
     ]
 
-def legends():
+def legends(base):
     element = "<table border='1' id='legends'>"
     for icon, txt in ICONS:
-        element += "<tr><td>%s</td><td>%s</td></tr>" % (icon, txt)
+        element += "<tr><td>%s</td><td>%s</td></tr>" % (icon.format(base), txt)
     element += '</table>'
     return element
 %>
@@ -112,15 +110,46 @@ def legends():
         return "\n".join(el)
 %>
 
+<%
+    LINK_INFO = [
+    {
+        'href':"{}/static/bootstrap/css/bootstrap.min.css",
+        'rel':"stylesheet",
+        'media':"screen"},
+    {
+        'href':"{}/static/style.css",
+        'rel':"stylesheet",
+        'media':"all"}
+    ]
+
+    def boot_strap(base):
+        line = []
+        for d in LINK_INFO:
+            _href = d['href'].format(base)
+            line.append('<link href={href} rel={rel} media={media}>'.format(
+                 href=_href,rel=d['rel'],media=d['media']))
+        return "\n".join(line)
+%>
+
+<%
+    SCRIPT_INFO = ["{}/static/jquery.min.1.9.1.js", "{}/static/bootstrap/js/bootstrap.min.js"]
+
+    def postfix(base):
+        line = []
+        for d in SCRIPT_INFO:
+            _src = d.format(base)
+            line.append('<script src={}></script>'.format(_src))
+        return "\n".join(line)
+
+    %>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>HEART OAuth2 AS Tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap -->
-    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-    <link href="/static/style.css" rel="stylesheet" media="all">
-
+    ${boot_strap(base)}
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
     <script src="../../assets/js/html5shiv.js"></script>
@@ -160,12 +189,8 @@ def legends():
         ${op_choice(base, flows, test_info, headlines)}
         <hr class="separator">
         <h3>Legends</h3>
-        ${legends()}
+        ${legends(base)}
     </div>
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="/static/jquery.min.1.9.1.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
-
+  ${postfix(base)}
 </body>
 </html>

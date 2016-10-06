@@ -68,7 +68,7 @@ Flows:
       - T
     desc: Simple token profile with RS256 signatures
     sequence:
-      - Login:
+      - init:
           set_start_page: ''
           add_post_condition:
             http_response:
@@ -93,7 +93,7 @@ Flows:
       - T
     desc: Simple token profile with ES256 signatures
     sequence:
-      - Login:
+      - Init:
           set_start_page: ''
           add_post_condition:
             http_response:

@@ -158,7 +158,7 @@ class Provider(provider.Provider):
             req = AccessTokenRequest().deserialize(request, 'urlencoded')
             client_id = self.client_authn(self, req, authn)
         except Exception as err:
-            self.events.stored(EV_FAULT, err)
+            self.events.store(EV_FAULT, err)
             return self._error(error="incorrect_behavior",
                                descr="Failed to verify client")
 

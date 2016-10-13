@@ -10,7 +10,8 @@ CA_BUNDLE = None
 VERIFY_SSL = False
 CERT_CHAIN = None
 
-ISSUER = "https://localhost:8092/"
+ISSUER = "http://localhost/oidc_op"
+#ISSUER = "https://localhost:8092/"
 #ISSUER = "https://oictest.umdc.umu.se:8051/"
 
 KEY_EXPORT_URL = "%sstatic/jwk.json" % BASE

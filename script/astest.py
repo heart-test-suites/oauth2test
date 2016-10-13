@@ -157,11 +157,11 @@ if __name__ == '__main__':
 
     # export JWKS
     _sdir = 'static'
-    if _port not in [443,80]:
-        jwks_uri = "{}:{}/static/jwks_{}.json".format(CONF.BASE, _port, _port)
+    if _port not in [443,80]:  # can only occur if not path2port
+        jwks_uri = "{}:{}/static/jwks_{}.json".format(_base, _port, _port)
         f = open('{}/jwks_{}.json'.format(_sdir, _port), "w")
     else:
-        jwks_uri = "{}/static/jwks.json".format(CONF.BASE)
+        jwks_uri = "{}static/jwks.json".format(_base)
         f = open('{}/jwks.json'.format(_sdir), "w")
     f.write(json.dumps(jwks))
     f.close()

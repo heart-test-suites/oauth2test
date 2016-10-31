@@ -11,12 +11,12 @@ from os.path import isfile
 from os.path import join
 
 import requests
-from aatest import Trace
-from aatest.events import Events
-from aatest.events import EV_REQUEST
-from aatest.events import EV_RESPONSE
-from aatest.parse_cnf import parse_yaml_conf
-from aatest.session import SessionHandler
+from otest import Trace
+from otest.events import Events
+from otest.events import EV_REQUEST
+from otest.events import EV_RESPONSE
+from otest.parse_cnf import parse_yaml_conf
+from otest.session import SessionHandler
 
 from future.backports.urllib.parse import parse_qs
 

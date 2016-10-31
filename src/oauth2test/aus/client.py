@@ -11,23 +11,26 @@ class Client(client.Client):
         self.conv = None
 
     def store_response(self, clinst, text):
-        ref = self.event_store.store(EV_PROTOCOL_RESPONSE, clinst)
-        self.event_store.store(EV_RESPONSE, text, ref=ref)
+        self.conv.events.store(EV_RESPONSE, text)
+        self.conv.events.store(EV_PROTOCOL_RESPONSE, clinst)
+        self.conv.trace.response(clinst)
 
 
 def make_client(**kw_args):
+    """
+    Have to get own copy of keyjar
+
+    :param kw_args:
+    :return:
+    """
     c_keyjar = kw_args["keyjar"].copy()
     _cli = Client(client_authn_method=CLIENT_AUTHN_METHOD, keyjar=c_keyjar)
-    _cli.kid = kw_args["kidd"]
-    _cli.jwks_uri = kw_args["jwks_uri"]
 
-    try:
-        _cli_info = kw_args["conf"].INFO["client"]
-    except KeyError:
-        pass
-    else:
-        for arg, val in list(_cli_info.items()):
-            setattr(_cli, arg, val)
+    c_info = {'keyjar': c_keyjar}
+    for arg, val in list(kw_args.items()):
+        if arg in ['keyjar']:
+            continue
+        setattr(_cli, arg, val)
+        c_info[arg] = val
 
-    return _cli
-
+    return _cli, c_info

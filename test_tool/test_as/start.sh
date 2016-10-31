@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-./asrp.py -p C.T.T.T.ns. -f ../flows_c.yaml conf
+./astest.py -f ../flows_c.yaml -m heart_interop_ports.csv conf

@@ -33,7 +33,7 @@ class Discovery(Operation):
                                  **self.op_args)
         else:
             self.conv.entity.provider_info = ProviderConfigurationResponse(
-                **self.conf.INFO["provider_info"]
+                **self.conv.entity_config["provider_info"]
             )
         self.conv.trace.response(self.conv.entity.provider_info)
 
@@ -58,7 +58,7 @@ class Registration(Request):
                     raise Break("Unexpected error response")
         else:
             self.conv.entity.store_registration_info(
-                ClientInfoResponse(**self.conf.INFO["registered"]))
+                ClientInfoResponse(**self.conf.CLIENT["registration_response"]))
         self.conv.trace.response(self.conv.entity.registration_response)
 
     def map_profile(self, profile_map):
@@ -67,9 +67,11 @@ class Registration(Request):
 
     def op_setup(self):
         if self.dynamic:
-            self.req_args.update(self.conf.INFO["client"])
+            self.req_args.update(self.conv.entity_config["registration_info"])
             self.req_args["url"] = self.conv.entity.provider_info[
                 "registration_endpoint"]
+            if self.conv.entity.jwks_uri:
+                self.req_args['jwks_uri'] = self.conv.entity.jwks_uri
 
 
 class AccessToken(SyncPostRequest):

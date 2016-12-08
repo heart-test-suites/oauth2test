@@ -18,25 +18,25 @@ from oauth2test.aus.request import TokenRevocation
 __author__ = 'roland'
 
 PMAP = {"C": "Basic",
-        "I": "Implicit (id_token)",
+        "T": "Implicit (token)",
         'D': 'Direct Access'}
 
 PROFILEMAP = {
-    Discovery: {"C": {}, "I": {}},
-    Done: {"C": {}, "I": {}, "D": {}},
-    Note: {"C": {}, "I": {}, "D": {}},
+    Discovery: {"C": {}, "T": {}},
+    Done: {"C": {}, "T": {}, "D": {}},
+    Note: {"C": {}, "T": {}, "D": {}},
     SyncAuthn: {
         "C": {set_request_args: {"response_type": ["code"]},
               check_endpoint: "authorization_endpoint"},
-        "I": {set_request_args: {"response_type": ["token"]}},
+        "T": {set_request_args: {"response_type": ["token"]}},
     },
     AsyncAuthn: {
         "C": {set_request_args: {"response_type": ["code"]}},
-        "I": {set_request_args: {"response_type": ["token"]}},
+        "T": {set_request_args: {"response_type": ["token"]}},
     },
     AccessToken: {
         "C": {},
-        "I": None,
+        "T": None,
         'D': None
     },
     Registration: {
@@ -44,24 +44,31 @@ PROFILEMAP = {
             set_request_args: {
                 "response_types": ["code"],
                 "grant_types": ["authorization_code"]}},
-        "I": {
+        "T": {
             set_request_args: {
                 "response_types": ["token"],
                 "grant_types": ["implicit"],
             }}
     },
-    TokenIntrospection: {"C": {}, "I": {}, "D": {}},
-    TokenRevocation: {"C": {}, "I": {}, "D": {}},
+    TokenIntrospection: {"C": {}, "T": {}, "D": {}},
+    TokenRevocation: {"C": {}, "T": {}, "D": {}},
 }
 
 CRYPT = {"n": "none", "s": "signing", "e": "encryption"}
 SUBPROF = {"n": "none", "s": "sign", "e": "encrypt"}
 
 RT = {"C": "code", "D": "client cred", "T": "token"}
-ATTR = ["profile"]
+ATTR = ["profile", 'webfinger', 'discovery', 'registration']
 
 
 def to_profile(session, representation="list"):
+    """
+    Translate position to name
+
+    :param session: Session information
+    :param representation: Type of profile information
+    :return: dictionary
+    """
     p = session["profile"].split(".")
     prof = [RT[p[0]]]
 
@@ -75,6 +82,12 @@ def to_profile(session, representation="list"):
 
 
 def get_profile_info(session, test_id=None):
+    """
+
+    :param session:
+    :param test_id:
+    :return:
+    """
     try:
         _conv = session["conv"]
     except KeyError:
@@ -98,9 +111,6 @@ def get_profile_info(session, test_id=None):
                 "Timestamp": in_a_while()}
 
     return {}
-
-
-RT = {"C": "code", "T": "token", 'D': 'client_credentials'}
 
 
 class ProfileHandler(prof_util.ProfileHandler):

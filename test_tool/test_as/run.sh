@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-astest.py -f flows/flows_c.yaml -m heart_interop_ports.csv conf
+config_server.py -p 9000 -c tt_config heart_config

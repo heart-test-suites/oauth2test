@@ -1,5 +1,17 @@
 PORT = 8100
 BASE = "http://localhost"
+
+# If BASE is https these has to be specified
+#SERVER_CERT = "certs/cert.pem"
+#SERVER_KEY = "certs/key.pem"
+#CA_BUNDLE = None
+#CERT_CHAIN = None
+
+# If you expect that the party on the other side uses self-signed certificates
+# or other certificates that can not be verified using the root certs
+# available on this machine
+VERIFY_SSL = False
+
 KEYS = [
     {"key": "../keys/enc.key", "type": "RSA", "use": ["enc"]},
     {"key": "../keys/sig.key", "type": "RSA", "use": ["sig"]},

@@ -51,5 +51,5 @@ setup(
         'entropy'
     ],
     zip_safe=False,
-    scripts=['script/astest.py']
+    scripts=['script/astest.py', 'script/oauth2_setup.py']
 )

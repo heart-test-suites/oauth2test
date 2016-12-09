@@ -63,7 +63,8 @@ def oauth2_rp_setup(distroot):
         if os.path.isdir(_dir) is False:
             shutil.copytree(_src, _dir)
 
-    for _fname in ['flows.yaml', 'run.sh', 'example_conf.py', 'profiles.json',
+    for _fname in ['flows.yaml', 'run_code.sh', 'run_token.sh',
+                   'example_conf.py', 'profiles.json',
                    'path2port.csv', 'uri-schemes-1.csv']:
         _file = os.path.join(_op_dir, _fname)
         copy_if_not_same(_file, _fname)

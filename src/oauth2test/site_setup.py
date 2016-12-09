@@ -34,12 +34,14 @@ def oauth2_as_setup(distroot):
             os.mkdir(_dir)
 
     _as_dir = os.path.join(distroot, 'test_tool', 'test_as')
-    for _dir in ['static', 'htdocs', 'flows', 'entity_info']:
+    for _dir in ['static', 'htdocs', 'entity_info']:
         _src = os.path.join(_as_dir, _dir)
         if os.path.isdir(_dir) is False:
             shutil.copytree(_src, _dir)
 
-    for _fname in ['run.sh', 'example_conf.py', 'heart_interop_ports.csv']:
+    for _fname in ['run.sh', 'example_conf.py', 'flows.yaml', 'path2port.csv',
+                   'tt_config.py', 'config_server.py', 'astest_run.sh',
+                   'heart_config_example.py']:
         _file = os.path.join(_as_dir, _fname)
         copy_if_not_same(_file, _fname)
 

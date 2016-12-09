@@ -9,7 +9,7 @@ CERT_CHAIN = None
 VERIFY_SSL = False
 
 BASE_URL = 'http://localhost'
-MAKO_DIR = 'oidf_mako'
+MAKO_DIR = 'mako'
 ENT_PATH = 'entities'
 ENT_INFO = 'entity_info'
 

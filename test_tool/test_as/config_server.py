@@ -5,9 +5,8 @@ import logging
 import argparse
 
 from mako.lookup import TemplateLookup
-from otest.utils import setup_logging
-
 from oidctest.app_conf import Application
+from otest.utils import setup_logging
 
 logger = logging.getLogger('')
 

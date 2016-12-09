@@ -64,6 +64,6 @@ def oauth2_rp_setup(distroot):
             shutil.copytree(_src, _dir)
 
     for _fname in ['flows.yaml', 'run.sh', 'example_conf.py', 'profiles.json',
-                   'heart_interop_ports.csv']:
+                   'path2port.csv', 'uri-schemes-1.csv']:
         _file = os.path.join(_op_dir, _fname)
         copy_if_not_same(_file, _fname)

@@ -11,6 +11,6 @@ import json
 import time
 
 __author__ = 'roland'
-__version__ = '0.1.1'
+__version__ = '0.5.0'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2016 Roland Hedberg'

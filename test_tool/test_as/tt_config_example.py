@@ -12,8 +12,6 @@ BASE = 'http://localhost'
 ENT_PATH = 'entities'
 ENT_INFO = 'entity_info'
 
-# FLOWS = ['flows/flows_c.yaml']
-
 KEYS = [
     {"key": "keys/enc.key", "type": "RSA", "use": ["enc"]},
     {"key": "keys/sig.key", "type": "RSA", "use": ["sig"]},

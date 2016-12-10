@@ -1,3 +1,39 @@
+<%!
+
+from otest.check import STATUSCODE
+from otest import summation
+
+def do_assertions(out):
+  return summation.condition(out, True)
+%>
+
+<%!
+
+from otest.events import layout
+
+def trace_output(events):
+    """
+
+    """
+    element = ["<h3>Trace output</h3>", "<pre><code>"]
+    start = 0
+    for event in events:
+        if not start:
+            start = event.timestamp
+        element.append(layout(start, event))
+    element.append("</code></pre>")
+    return "\n".join(element)
+%>
+
+<%
+def profile_output(pinfo):
+    element = []
+    for key, val in pinfo.items():
+        element.append("<em>%s:</em> %s<br>" % (key,val))
+
+    return "\n".join(element)
+%>
+
 <%
     LINK_INFO = [
     {
@@ -31,86 +67,33 @@
 
     %>
 
-<%!
-
-  def print_result(events):
-    """
-    Displays the test information
-    """
-    elements = []
-    for event in events:
-        elements.append('{}<br>'.format(event))
-    return "\n".join(elements)
-%>
-
-<%!
-  def print_dict(obj):
-    elements = ['<table>']
-    for k,v in obj.items():
-      elements.append('<tr><td>{}</td><td>{}</td></tr>'.format(k,v))
-    elements.append('</table')
-    return "\n".join(elements)
-%>
-
-
 <!DOCTYPE html>
+
 <html>
-<head>
-  <title>HEART OAuth2 RP Tests</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  ${boot_strap(base)}
-  <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!--[if lt IE 9]>
-  <script src="../../assets/js/html5shiv.js"></script>
-  <script src="../../assets/js/respond.min.js"></script>
-  <![endif]-->
-  <style>
-    h3 {
-      background-color: lightblue;
-    }
+  <head>
+    <title>HEART OIDC OP Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    ${boot_strap(base)}
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="../../assets/js/html5shiv.js"></script>
+      <script src="../../assets/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
 
-    h4 {
-      background-color: lightcyan;
-    }
-
-    @media (max-width: 768px) {
-      .jumbotron {
-        border-radius: 10px;
-        margin-left: 4%;
-        margin-right: 4%;
-      }
-    }
-
-    @media (min-width: 768px) and (max-width: 1600px) {
-      .jumbotron {
-        border-radius: 10px;
-        margin-left: 10%;
-        margin-right: 10%;
-      }
-    }
-
-    @media (min-width: 1600px) {
-      .jumbotron {
-        border-radius: 10px;
-        margin-left: 20%;
-        margin-right: 20%;
-      }
-    }
-  </style>
-</head>
-<body>
-<!-- Main component for a primary marketing message or call to action -->
-<div class="jumbotron">
-  ${print_dict(profile)}
-  <hr>
-  % for item in trace:
-    ${item}<br>
-  % endfor
-  <hr>
-  ${events}
-  <hr>
-  ${result}
-</div>
-${postfix(base)}
-</body>
+    <div class="container">
+     <!-- Main component for a primary marketing message or call to action -->
+        <h2>Test info</h2>
+        ${profile_output(profile)}
+        <hr>
+        ${do_assertions(events)}
+        <hr>
+        ${trace_output(events)}
+        <hr>
+        <h3>Result</h3>${result}
+    </div> <!-- /container -->
+    ${postfix(base)}
+  </body>
 </html>

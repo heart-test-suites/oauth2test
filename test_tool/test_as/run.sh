@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-config_server.py -p 9000 -c tt_config config
+python3 config_server.py -p 9000 -c tt_config config

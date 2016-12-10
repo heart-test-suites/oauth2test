@@ -1,7 +1,7 @@
 ---
 Flows:
   RP-Code-RS256:
-    profiles:
+    profile:
       - C
     desc: Simple code profile with RS256 signatures
     sequence:

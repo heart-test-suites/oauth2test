@@ -58,7 +58,6 @@ class Provider(provider.Provider):
         self.claim_access_token = {}
         self.init_keys = []
         self.update_key_use = ""
-        self.trace = None
         self.events = event_db
         self.userinfo = userinfo
         self.template_lookup = template_lookup
@@ -243,9 +242,9 @@ class Provider(provider.Provider):
                 if same == len(self.init_keys):  # no change
                     raise TestError("Keys unchanged")
                 else:
-                    self.trace.info(
-                        "{} keys changed, {} keys the same".format(
-                            len(self.init_keys) - same, same))
+                    self.events.store('Key change',
+                                      "{} changed, {} the same".format(
+                                          len(self.init_keys) - same, same))
 
     def __setattr__(self, key, value):
         if key == "keys":

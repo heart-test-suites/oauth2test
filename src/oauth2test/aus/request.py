@@ -10,7 +10,8 @@ from oic.oic import ProviderConfigurationResponse
 
 from otest import Unknown
 from otest import Break
-from otest.events import EV_HTTP_RESPONSE
+from otest.events import EV_HTTP_RESPONSE, EV_NOOP, EV_REQUEST, OUTGOING, \
+    EV_PROTOCOL_RESPONSE, INCOMING
 from otest.aus.operation import Operation
 from otest.aus.request import Request
 from otest.aus.request import SyncPostRequest
@@ -32,10 +33,10 @@ class Discovery(Operation):
             self.catch_exception(self.conv.entity.provider_config,
                                  **self.op_args)
         else:
+            self.conv.events.store(EV_NOOP, "Dynamic discovery")
             self.conv.entity.provider_info = ProviderConfigurationResponse(
                 **self.conv.entity_config["provider_info"]
             )
-        self.conv.trace.response(self.conv.entity.provider_info)
 
     def op_setup(self):
         pass
@@ -90,18 +91,22 @@ class AccessToken(SyncPostRequest):
         if self.skip:
             return
 
-        self.conv.trace.info(
-            "Access Token Request with op_args: {}, req_args: {}".format(
-                self.op_args, self.req_args))
+        self.conv.events.store(
+            EV_REQUEST,
+            "op_args: {}, req_args: {}".format(self.op_args, self.req_args),
+            direction=OUTGOING)
+
         atr = self.conv.entity.do_access_token_request(
             request_args=self.req_args, **self.op_args)
 
         if "error" in atr:
-            self.conv.trace.response("Access Token response: {}".format(atr))
+            self.conv.events.store(EV_PROTOCOL_RESPONSE, atr,
+                                   direction=INCOMING)
+
             return False
 
-        self.conv.trace.response(atr)
-        assert isinstance(atr, AccessTokenResponse)
+        #assert isinstance(atr, AccessTokenResponse)
+        return atr
 
 
 class TokenIntrospection(SyncPostRequest):
@@ -123,19 +128,22 @@ class TokenIntrospection(SyncPostRequest):
         if self.skip:
             return
 
-        self.conv.trace.info(
-            "Token Introspection Request with op_args: {}, req_args: {}".format(
-                self.op_args, self.req_args))
+        self.conv.events.store(
+            EV_REQUEST,
+            "op_args: {}, req_args: {}".format(self.op_args, self.req_args),
+            direction=OUTGOING)
+
         atr = self.conv.entity.do_token_introspection(
             request_args=self.req_args, **self.op_args)
 
         if "error" in atr:
-            self.conv.trace.response(
-                "Token Introspection response: {}".format(atr))
+            self.conv.events.store(EV_PROTOCOL_RESPONSE, atr,
+                                   direction=INCOMING)
             return False
 
         self.conv.trace.response(atr)
-        assert isinstance(atr, TokenIntrospectionResponse)
+        #assert isinstance(atr, TokenIntrospectionResponse)
+        return atr
 
 
 class TokenRevocation(SyncPostRequest):
@@ -157,14 +165,15 @@ class TokenRevocation(SyncPostRequest):
         if self.skip:
             return
 
-        self.conv.trace.info(
-            "Token Revocation Request with op_args: {}, req_args: {}".format(
-                self.op_args, self.req_args))
+        self.conv.events.store(
+            EV_REQUEST,
+            "op_args: {}, req_args: {}".format(self.op_args, self.req_args),
+            direction=OUTGOING)
+
         resp = self.conv.entity.do_token_revocation(
             request_args=self.req_args, **self.op_args)
 
-        self.conv.events.store(EV_HTTP_RESPONSE, resp)
-        self.conv.trace.response('HTTP response: {}'.format(resp.status_code))
+        #self.conv.events.store(EV_HTTP_RESPONSE, resp)
 
 
 class RefreshAccessToken(SyncPostRequest):

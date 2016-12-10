@@ -26,13 +26,18 @@ def test_output(out):
 %>
 
 <%!
-def trace_output(trace):
+from otest.events import layout
+
+def trace_output(events):
     """
 
     """
     element = ["<h3>Trace output</h3>", "<pre><code>"]
-    for item in trace:
-        element.append("%s" % item)
+    start = 0
+    for event in events:
+        if not start:
+            start = event.timestamp
+        element.append(layout(start, event))
     element.append("</code></pre>")
     return "\n".join(element)
 %>
@@ -91,7 +96,7 @@ def trace_output(trace):
      <!-- Main component for a primary marketing message or call to action -->
      <h2>Result</h2>
        ${test_output(output)}
-       ${trace_output(trace)}
+       ${trace_output(events)}
 
     </div> <!-- /container -->
     $postfix(base)

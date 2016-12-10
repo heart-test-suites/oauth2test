@@ -16,7 +16,8 @@ from oic.oauth2.message import AccessTokenResponse
 
 from otest import Break
 from otest import Unknown
-from otest.events import EV_PROTOCOL_RESPONSE
+from otest.events import EV_PROTOCOL_RESPONSE, EV_NOOP, EV_REQUEST, OUTGOING, \
+    INCOMING
 from otest.prof_util import DISCOVER
 from otest.prof_util import REGISTER
 from otest.prof_util import WEBFINGER
@@ -72,13 +73,11 @@ class Webfinger(Operation):
 
     def run(self):
         if not self.dynamic:
+            self.conv.events.store(EV_NOOP, "WebFinger")
             self.conv.info["issuer"] = self.conf.INFO["srv_discovery_url"]
         else:
             _conv = self.conv
-            _conv.trace.info(
-                "Discovery of resource: {}".format(self.resource))
             issuer = _conv.entity.discover(self.resource)
-            _conv.trace.reply(issuer)
             _conv.info["issuer"] = issuer
             _conv.events.store('issuer', issuer)
 
@@ -196,14 +195,16 @@ class AccessToken(SyncPostRequest):
         if self.skip:
             return
 
-        self.conv.trace.info(
-            "Access Token Request with op_args: {}, req_args: {}".format(
-                self.op_args, self.req_args))
+        self.conv.events.store(
+            EV_REQUEST,
+            "op_args: {}, req_args: {}".format(self.op_args, self.req_args),
+            direction=OUTGOING)
         atr = self.conv.entity.do_access_token_request(
             request_args=self.req_args, **self.op_args)
 
         if "error" in atr:
-            self.conv.trace.response("Access Token response: {}".format(atr))
+            self.conv.events.store(EV_PROTOCOL_RESPONSE, atr,
+                                   direction=INCOMING)
             return False
 
         try:
@@ -224,8 +225,8 @@ class AccessToken(SyncPostRequest):
             raise IssuerMismatch(" {} != {}".format(self.conv.info["issuer"],
                                                     atr["id_token"]["iss"]))
 
-        self.conv.trace.response(atr)
-        assert isinstance(atr, AccessTokenResponse)
+        #assert isinstance(atr, AccessTokenResponse)
+        return atr
 
 
 class UserInfo(SyncGetRequest):

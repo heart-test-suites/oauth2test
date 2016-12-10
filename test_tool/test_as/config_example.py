@@ -16,5 +16,5 @@ ENT_INFO = 'entity_info'
 FLOWS = ['flows.yaml']
 
 PATH2PORT = 'path2port.csv'
-PORT_MIN = 9100
-PORT_MAX = 9149
+PORT_MIN = 8100
+PORT_MAX = 8149

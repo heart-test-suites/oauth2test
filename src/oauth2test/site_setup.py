@@ -36,14 +36,18 @@ def oauth2_as_setup(distroot):
     _as_dir = os.path.join(distroot, 'test_tool', 'test_as')
     for _dir in ['static', 'mako', 'entity_info']:
         _src = os.path.join(_as_dir, _dir)
-        if os.path.isdir(_dir) is False:
-            shutil.copytree(_src, _dir)
+        if os.path.isdir(_dir):
+            shutil.rmtree(_dir)
+        shutil.copytree(_src, _dir)
 
-    for _fname in ['astest_run.sh', 'config_example.py', 'config_server.py',
-                   'flows.yaml', 'path2port.csv', 'run.sh',
-                   'tt_config_example.py']:
+    for _fname in ['astest_run.sh','run.sh']:
         _file = os.path.join(_as_dir, _fname)
         copy_if_not_same(_file, _fname)
+
+    for _fname in ['config_example.py', 'config_server.py',
+                   'flows.yaml', 'path2port.csv', 'tt_config_example.py']:
+        _file = os.path.join(_as_dir, _fname)
+        copy_if_not_same(_file, _fname, True)
 
     subprocess.call(
         ["make_entity_info.py", "-i", "https://example.com", "-p", "C.T.T.T",
@@ -60,11 +64,15 @@ def oauth2_rp_setup(distroot):
     _op_dir = os.path.join(distroot, 'test_tool', 'test_rp')
     for _dir in ['static', 'htdocs']:
         _src = os.path.join(_op_dir, _dir)
-        if os.path.isdir(_dir) is False:
-            shutil.copytree(_src, _dir)
+        if os.path.isdir(_dir):
+            shutil.rmtree(_dir)
+        shutil.copytree(_src, _dir)
 
-    for _fname in ['flows.yaml', 'run_code.sh', 'run_token.sh',
-                   'example_conf.py', 'profiles.json',
+    for _fname in ['flows.yaml', 'example_conf.py', 'profiles.json',
                    'path2port.csv', 'uri-schemes-1.csv']:
+        _file = os.path.join(_op_dir, _fname)
+        copy_if_not_same(_file, _fname, True)
+
+    for _fname in ['run_code.sh', 'run_token.sh']:
         _file = os.path.join(_op_dir, _fname)
         copy_if_not_same(_file, _fname)

@@ -27,7 +27,7 @@ Flows:
             verify-authorization-redirect_uri: null
       - AccessTokenResponse
   RP-Code-ES256:
-    profiles:
+    profile:
       - C
     desc: Simple code profile with ES256 signatures
     sequence:
@@ -64,7 +64,7 @@ Flows:
             verify-authorization-redirect_uri: null
       - AccessTokenResponse
   RP-Token-RS256:
-    profiles:
+    profile:
       - T
     desc: Simple token profile with RS256 signatures
     sequence:
@@ -89,7 +89,7 @@ Flows:
             verify-authorization-state-entropy: null
             verify-authorization-redirect_uri: null
   RP-Token-ES256:
-    profiles:
+    profile:
       - T
     desc: Simple token profile with ES256 signatures
     sequence:

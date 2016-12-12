@@ -53,8 +53,6 @@ def oauth2_as_setup(distroot):
         ["make_entity_info.py", "-i", "https://example.com", "-p", "C.T.T.T",
          "-s", "-e", "-w", "diana@localhost:8040", "-t", "CTTT"])
 
-    os.chdir('..')
-
 
 def oauth2_rp_setup(distroot):
     for _dir in ['certs', 'keys', 'log']:

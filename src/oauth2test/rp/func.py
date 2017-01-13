@@ -12,9 +12,13 @@ def set_start_page(oper, args):
     _conf = oper.sh['test_conf']
     _url = _conf['start_page']
     _iss = oper.conv.entity.baseurl
-    _params = _conf['params'].replace('<issuer>', _iss)
-    _args = dict([p.split('=') for p in _params.split('&')])
-    oper.start_page = _url + '?' + urlencode(_args)
+    try:
+        _params = _conf['params'].replace('<issuer>', _iss)
+    except KeyError:
+        oper.start_page = _url
+    else:
+        _args = dict([p.split('=') for p in _params.split('&')])
+        oper.start_page = _url + '?' + urlencode(_args)
 
 
 def set_op(oper, args):

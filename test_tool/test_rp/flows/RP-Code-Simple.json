@@ -16,24 +16,6 @@
             ]
           }
         },
-        "set_configuration": {
-          "request_object_signing_alg_values_supported": [
-            "ES256"
-          ],
-          "id_token_signing_alg_values_supported": [
-            "ES256"
-          ],
-          "token_endpoint_auth_signing_alg_values_supported": [
-            "ES256"
-          ]
-        },
-        "set_op": {
-          "jwx_def": {
-            "signing_alg": {
-              "id_token": "ES256"
-            }
-          }
-        },
         "set_start_page": ""
       }
     },
@@ -62,5 +44,5 @@
     },
     "AccessTokenResponse"
   ],
-  "desc": "Simple code profile with ES256 signatures"
+  "desc": "Simple code profiles"
 }

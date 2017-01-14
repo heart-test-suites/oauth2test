@@ -1,13 +1,13 @@
 {
-  "group": "Code",
+  "group": "Token",
   "usage": {
     "return_type": [
-      "C"
+      "T"
     ]
   },
   "sequence": [
     {
-      "Init": {
+      "init": {
         "add_post_condition": {
           "http_response": {
             "status_code": [
@@ -26,7 +26,7 @@
           "verify-registration-redirect_uri-scheme": null,
           "verify-registration-response_types": {
             "allowed": [
-              "code"
+              "token"
             ]
           },
           "verify-registration-public_key-registration": null
@@ -41,8 +41,7 @@
           "verify-authorization-redirect_uri": null
         }
       }
-    },
-    "AccessTokenResponse"
+    }
   ],
-  "desc": "Simple code profile with RS256 signatures"
+  "desc": "Simple token profile"
 }

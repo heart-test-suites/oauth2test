@@ -114,6 +114,18 @@
       % endfor
     </select>
   </p>
+  <p>
+    Choose response_type:
+    <select name="response_type">
+      % for a,b,v in [('Basic - code', 'C', 1), ('Implicit - token', 'T', 0)]:
+        % if v == selected:
+          <option value="${b}" selected>${a}</option>
+        % else:
+          <option value="${b}">${a}</option>
+        % endif
+      % endfor
+    </select>
+  </p>
   <button type="submit" value="Submit" class="button">Submit</button>
 </form>
 </body>

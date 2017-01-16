@@ -34,7 +34,7 @@ def oauth2_as_setup(distroot):
             os.mkdir(_dir)
 
     _as_dir = os.path.join(distroot, 'test_tool', 'test_as')
-    for _dir in ['static', 'mako', 'entity_info']:
+    for _dir in ['static', 'mako', 'entity_info', "flows"]:
         _src = os.path.join(_as_dir, _dir)
         if os.path.isdir(_dir):
             shutil.rmtree(_dir)
@@ -45,7 +45,7 @@ def oauth2_as_setup(distroot):
         copy_if_not_same(_file, _fname)
 
     for _fname in ['config_example.py', 'config_server.py',
-                   'flows.yaml', 'path2port.csv', 'tt_config_example.py']:
+                   'path2port.csv', 'tt_config_example.py']:
         _file = os.path.join(_as_dir, _fname)
         copy_if_not_same(_file, _fname, True)
 
@@ -60,17 +60,17 @@ def oauth2_rp_setup(distroot):
             os.mkdir(_dir)
 
     _op_dir = os.path.join(distroot, 'test_tool', 'test_rp')
-    for _dir in ['static', 'htdocs']:
+    for _dir in ['static', 'htdocs', "flows"]:
         _src = os.path.join(_op_dir, _dir)
         if os.path.isdir(_dir):
             shutil.rmtree(_dir)
         shutil.copytree(_src, _dir)
 
-    for _fname in ['flows.yaml', 'example_conf.py', 'profiles.json',
+    for _fname in ['example_conf.py', 'profiles.json',
                    'path2port.csv', 'uri-schemes-1.csv']:
         _file = os.path.join(_op_dir, _fname)
         copy_if_not_same(_file, _fname, True)
 
-    for _fname in ['run_code.sh', 'run_token.sh']:
+    for _fname in ['run.sh']:
         _file = os.path.join(_op_dir, _fname)
         copy_if_not_same(_file, _fname)

@@ -1,0 +1,31 @@
+{
+  "group": "AccessToken",
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "AccessTokenResponse"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "T"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": "none"
+      }
+    },
+    "Registration",
+    {
+      "AsyncAuthn": {
+        "set_response_where": {
+          "where": "form_post"
+        }
+      }
+    }
+  ],
+  "desc": "Access token request with private_key_jwt authentication"
+}

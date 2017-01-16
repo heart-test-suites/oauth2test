@@ -1,0 +1,33 @@
+{
+  "group": "Registration",
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "ClientInfoResponse",
+        "RegistrationResponse"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "C",
+      "T"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "static_jwk": null,
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt"
+        }
+      }
+    }
+  ],
+  "desc": "HEART client registration with jwks instead of jwks_uri"
+}

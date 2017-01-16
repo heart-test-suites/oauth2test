@@ -47,67 +47,20 @@
         else:
             el.append('<input type="checkbox" name="extra">')
         el.append('</p>')
-        el.append('<p><input type="submit" value="Continue"></p>')
+        el.append('<p><button type="submit" value="submit" class="button">Continue</button></p>')
         el.append('</form>')
         return "\n".join(el)
 %>
 
-<%
-    LINK_INFO = [
-    {
-        'href':"{}/static/bootstrap/css/bootstrap.min.css",
-        'rel':"stylesheet",
-        'media':"screen"},
-    {
-        'href':"{}/static/style.css",
-        'rel':"stylesheet",
-        'media':"all"}
-    ]
-
-    def boot_strap(base):
-        line = []
-        for d in LINK_INFO:
-            _href = d['href'].format(base)
-            line.append('<link href={href} rel={rel} media={media}>'.format(
-                 href=_href,rel=d['rel'],media=d['media']))
-        return "\n".join(line)
-%>
-
-<%
-    SCRIPT_INFO = ["{}/static/jquery.min.1.9.1.js", "{}/static/bootstrap/js/bootstrap.min.js"]
-
-    def postfix(base):
-        line = []
-        for d in SCRIPT_INFO:
-            _src = d.format(base)
-            line.append('<script src={}></script>'.format(_src))
-        return "\n".join(line)
-
-    %>
-
 <!DOCTYPE html>
 <html>
   <head>
-    <title>HEART OIDC OP Test</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap -->
-    ${boot_strap(base)}
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="../../assets/js/html5shiv.js"></script>
-      <script src="../../assets/js/respond.min.js"></script>
-    <![endif]-->
+    <title>HEART OAuth2 AS Tests</title>
+    <link rel="stylesheet" type="text/css" href="${base}/static/theme.css">
   </head>
   <body>
-    <div class="container">
-     <!-- Main component for a primary marketing message or call to action -->
-      <div class="jumbotron">
-        <h1>HEART OIDC OP Test</h1>
-          <h2>You can change the profile you are testing here:</h2>
-          ${profile_form(profile)}
-      </div>
-
-    </div> <!-- /container -->
-    ${postfix(base)}
+    <h1>HEART OAuth2 AS Test</h1>
+    <h2>You can change the profile you are testing here:</h2>
+      ${profile_form(profile)}
   </body>
 </html>

@@ -1,0 +1,48 @@
+{
+  "group": "AccessToken",
+  "assert": {
+    "verify-tokens": null,
+    "verify-response": {
+      "response_cls": [
+        "AccessTokenResponse"
+      ],
+      "not_claims": [
+        "refresh_token"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "C"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt"
+        },
+        "set_jwks_uri": null
+      }
+    },
+    "AsyncAuthn",
+    {
+      "AccessToken": {
+        "set_op_args": {
+          "authn_method": "private_key_jwt"
+        },
+        "check_support": {
+          "WARNING": {
+            "token_endpoint_auth_methods_supported": "private_key_jwt"
+          }
+        }
+      }
+    }
+  ],
+  "desc": "Access token request with private_key_jwt authentication"
+}

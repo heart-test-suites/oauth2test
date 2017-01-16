@@ -1,0 +1,39 @@
+{
+  "group": "Registration",
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "ClientInfoResponse",
+        "RegistrationResponse"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "C",
+      "T"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt"
+        },
+        "add_software_statement": {
+          "redirect_uris": null,
+          "grant_types": "authorization_code",
+          "client_uri": "https://example.com/",
+          "jwks_uri": null,
+          "client_name": "HAS.testtool"
+        }
+      }
+    }
+  ],
+  "desc": "HEART client registration with Software Statement"
+}

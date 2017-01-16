@@ -1,0 +1,33 @@
+{
+  "group": "Registration",
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "ClientInfoResponse",
+        "RegistrationResponse"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "C",
+      "T"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt"
+        },
+        "set_jwks_uri": null
+      }
+    }
+  ],
+  "desc": "HEART client registration"
+}

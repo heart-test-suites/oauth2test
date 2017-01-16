@@ -1,0 +1,51 @@
+{
+  "group": "AccessToken",
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "TokenIntrospectionResponse"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "C"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt"
+        },
+        "set_jwks_uri": null
+      }
+    },
+    "AsyncAuthn",
+    {
+      "AccessToken": {
+        "set_op_args": {
+          "authn_method": "private_key_jwt"
+        },
+        "check_support": {
+          "WARNING": {
+            "token_endpoint_auth_methods_supported": "private_key_jwt"
+          }
+        }
+      }
+    },
+    {
+      "TokenIntrospection": {
+        "set_op_args": {
+          "authn_method": "private_key_jwt"
+        }
+      }
+    }
+  ],
+  "desc": "The AS must supply token introspection endpoint"
+}

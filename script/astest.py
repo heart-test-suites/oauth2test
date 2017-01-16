@@ -83,9 +83,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-k', dest='insecure', action='store_true')
     parser.add_argument('-i', dest='issuer')
-    parser.add_argument('-f', dest='flows', action='append')
+    parser.add_argument('-f', dest='flowdir')
     parser.add_argument('-p', dest='port', type=int)
-    #parser.add_argument('-P', dest='profile')
+    # parser.add_argument('-P', dest='profile')
     parser.add_argument('-M', dest='makodir')
     parser.add_argument('-S', dest='staticdir')
     parser.add_argument('-s', dest='tls', action='store_true')
@@ -124,8 +124,11 @@ if __name__ == '__main__':
     setup_logging("%s/rp_%s.log" % (SERVER_LOG_FOLDER, args.port), logger)
     logger.info('construct_app_args')
 
+    display_order = [
+        "Discovery", "Registration", "Authorization request", "AccessToken"]
+
     _path, app_args = construct_app_args(args, CONF, request, func, profiles,
-                                         ent_conf)
+                                         ent_conf, display_order=display_order)
 
     app_args.update(
         {"msg_factory": message_factory,

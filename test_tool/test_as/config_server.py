@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', dest='base_url')
     parser.add_argument('-c', dest='test_tool_conf')
-    parser.add_argument('-f', dest='flows', action='append')
+    parser.add_argument('-f', dest='flowdir', action='append')
     parser.add_argument('-m', dest='path2port')
     parser.add_argument('-p', dest='port', default=80)
     parser.add_argument('-t', dest='tls', action='store_true')
@@ -73,10 +73,10 @@ if __name__ == '__main__':
     except AttributeError:
         pass
 
-    if args.flows:
-        _flows = args.flows
+    if args.flowdir:
+        _flowdir = args.flowdir
     else:
-        _flows = _conf.FLOWS
+        _flowdir = _conf.FLOWDIR
 
     mako_lookup = TemplateLookup(
         directories=[_dir + 'templates', _dir + 'htdocs'],
@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     app = Application(_base_url, mako_lookup, test_script='astest.py',
                       ent_path=_conf.ENT_PATH, ent_info=_conf.ENT_INFO,
-                      flows=_flows, path2port=_p2p, mako_dir=_dir,
+                      flowdir=_flowdir, path2port=_p2p, mako_dir=_dir,
                       test_tool_conf=args.test_tool_conf, **kwargs)
 
     SRV = wsgiserver.CherryPyWSGIServer(

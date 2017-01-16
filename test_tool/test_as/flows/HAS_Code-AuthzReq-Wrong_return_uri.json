@@ -1,0 +1,48 @@
+{
+  "group": "Authorization request",
+  "usage": {
+    "return_type": [
+      "C"
+    ]
+  },
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "ErrorResponse"
+      ]
+    },
+    "verify-redirect-uri": null
+  },
+  "note": "There are two acceptable outcomes: (1) returning an error response to the RP or (2) returning an error message to the End-User.",
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt"
+        },
+        "set_jwks_uri": null
+      }
+    },
+    "Note",
+    {
+      "AsyncAuthn": {
+        "set_expect_error": {
+          "error": [
+            "invalid_request"
+          ],
+          "stop": false
+        },
+        "modify_redirect_uri": "extension",
+        "set_request_args": {
+          "response_type": "code"
+        }
+      }
+    }
+  ],
+  "desc": "Authorization request with a return_uri that doesn't match the registered"
+}

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-astest.py -f flows/flows_c.yaml -m heart_interop_ports.csv conf
+astest.py -f flows -m heart_interop_ports.csv conf

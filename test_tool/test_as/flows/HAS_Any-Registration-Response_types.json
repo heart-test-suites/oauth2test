@@ -1,0 +1,42 @@
+{
+  "group": "Registration",
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "ErrorResponse"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "C",
+      "T"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "set_expect_error": {
+          "error": [
+            "invalid_client_metadata"
+          ],
+          "stop": false
+        },
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt",
+          "response_types": [
+            "code",
+            "token"
+          ]
+        },
+        "set_jwks_uri": null
+      }
+    }
+  ],
+  "desc": "HEART client registration with more then one response_type"
+}

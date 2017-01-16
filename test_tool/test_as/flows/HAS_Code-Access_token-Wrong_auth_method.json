@@ -1,0 +1,47 @@
+{
+  "group": "AccessToken",
+  "assert": {
+    "verify-response": {
+      "response_cls": [
+        "TokenErrorResponse"
+      ]
+    }
+  },
+  "usage": {
+    "return_type": [
+      "C"
+    ]
+  },
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    },
+    {
+      "Registration": {
+        "set_request_args": {
+          "token_endpoint_auth_method": "private_key_jwt"
+        },
+        "set_jwks_uri": null
+      }
+    },
+    "AsyncAuthn",
+    {
+      "AccessToken": {
+        "set_expect_error": {
+          "error": [
+            "invalid_request",
+            "access_denied",
+            "unauthorized_client"
+          ],
+          "stop": false
+        },
+        "set_op_args": {
+          "authn_method": "client_secret_jwt"
+        }
+      }
+    }
+  ],
+  "desc": "Access token request with wrong client authentication method"
+}

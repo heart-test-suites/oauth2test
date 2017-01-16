@@ -1,0 +1,36 @@
+{
+  "assert": {
+    "verify-jwks": null,
+    "verify-response": {
+      "claims": [
+        "issuer",
+        "authorization_endpoint",
+        "token_endpoint",
+        "introspection_endpoint",
+        "revocation_endpoint",
+        "jwks_uri"
+      ],
+      "response_cls": [
+        "ProviderConfigurationResponse",
+        "ASConfigurationResponse"
+      ]
+    },
+    "check-http-response": null,
+    "verify-cache-header": null
+  },
+  "desc": "HEART AS configuration discovery",
+  "group": "Discovery",
+  "sequence": [
+    {
+      "Discovery": {
+        "set_discovery_issuer": null
+      }
+    }
+  ],
+  "usage": {
+    "return_type": [
+      "C",
+      "T"
+    ]
+  }
+}
